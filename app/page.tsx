@@ -193,7 +193,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <span className="text-2xl font-bold text-indigo-600">
-              DailyBits
+              LazyBits
             </span>
             <span className="ml-3 text-sm text-gray-400">
               Next run: {nextRun}
