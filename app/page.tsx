@@ -4,6 +4,42 @@ import { useState, useEffect, useMemo } from "react";
 
 // ─── COPY BANKS ───────────────────────────────────────────────────────────────
 
+const TITLES_LOOKUP = [
+  "WHO ARE YOU, LAZY?",
+  "OI, IDENTIFY YOURSELF!",
+  "ENTER THE LAZY ZONE!",
+  "AYY WHO'S THERE?",
+  "LAZYBITS NEEDS YOUR EMAIL!",
+  "SHOW ME WHO YOU ARE!",
+  "FIRST THINGS FIRST... YOUR EMAIL!",
+  "LET'S GET YOU SET UP, LAZY!",
+  "EMAIL OR IT DIDN'T HAPPEN!",
+  "WELCOME. NOW GIVE ME YOUR EMAIL.",
+  "ACCESS GRANTED... AFTER YOUR EMAIL.",
+  "YOU SHALL NOT PASS... WITHOUT EMAIL!",
+  "STEP ONE: DON'T BE ANONYMOUS!",
+  "HI THERE! EMAIL PLS 🙏",
+  "YOUR LAZY JOURNEY STARTS HERE!",
+];
+
+const LOOKUP_BUTTONS = [
+  "LET'S GO ⚡",
+  "HIT ME! 🎯",
+  "DO IT! 🔥",
+  "FIND ME! 🔍",
+  "ENTER THE LAZY ZONE!",
+  "I'M READY! 🚀",
+  "TAKE ME IN!",
+  "LFG!!!",
+  "YES, THAT'S ME!",
+  "BEAM ME UP! 🛸",
+  "OPEN SESAME!",
+  "ENGAGE! 🖖",
+  "PUNCH IT! 👊",
+  "GO GO GO!",
+  "I IDENTIFY AS LAZY!",
+];
+
 const TITLES_CREATE = [
   "HEY GET YO LAZY ASS HERE!",
   "WAKE UP & SMELL THE NEWS!",
@@ -12,7 +48,7 @@ const TITLES_CREATE = [
   "NEW HERE? SPILL YOUR INTERESTS!",
   "OOH A FRESH LAZY, HOW CUTE!",
   "STEP RIGHT UP, GET YO BITS!",
-  "SPILL THE TEA ON YOUR VIBES!",
+  "SPILL THE TEA ON YOUR INTERESTS!",
   "YOU LOOK LIKE SOMEONE WHO LOVES NEWS!",
   "YOUR DAILY DOSE STARTS HERE!",
   "TIME TO GET YOURSELF INFORMED!",
@@ -33,7 +69,7 @@ const TITLES_EDIT = [
   "ALRIGHT ALRIGHT, WHAT CHANGED?",
   "BACK FOR MORE TWEAKS, HUH?",
   "YOU'RE NEVER SATISFIED ARE YOU 😤",
-  "FINE, LET'S UPDATE YOUR VIBES",
+  "FINE, LET'S UPDATE YOUR BITS",
   "STILL ALIVE? GOOD. EDIT AWAY.",
   "YOUR PREFERENCES, YOUR RULES I GUESS",
   "OK BOSS, WHAT ARE WE CHANGING?",
@@ -43,7 +79,7 @@ const TITLES_EDIT = [
   "MID-SEASON CORRECTIONS, I SEE",
   "CHARACTER DEVELOPMENT INCOMING!",
   "UPDATING THE LAZY PROTOCOL...",
-  "ANOTHER VIBE SHIFT, HUH?",
+  "ANOTHER SHIFT, HUH?",
   "THE GIRLIES ARE PIVOTING!",
   "OKAY OKAY, NEW PHONE WHO DIS",
   "MAIN CHARACTER ENERGY: EDITING",
@@ -61,7 +97,7 @@ const TITLES_MANAGE = [
   "OH HEY STRANGER!",
   "THE LAZY LEGEND RETURNS!",
   "WASSUP, YOUR SETTINGS ARE LIVE!",
-  "YOUR VIBE CHECK IS READY!",
+  "YOUR BIT CHECK IS READY!",
   "ACTIVE AND LAZY, AS IT SHOULD BE!",
   "YOUR BITS ARE SAFE AND SOUND!",
   "CURRENTLY SERVING: YOUR LAZY ASS",
@@ -126,7 +162,6 @@ const BACK_BUTTONS = [
   "HOLD UP HOLD UP",
   "MY MOM IS CALLING",
   "PRETEND I WASN'T HERE",
-  "VIBES ARE OFF, BACK",
   "NOT FEELING IT RN",
   "CHANGED MY MIND BESTIE",
   "RUN AWAY! 🏃",
@@ -137,6 +172,7 @@ const BACK_BUTTONS = [
   "COWARDLY RETREATING...",
   "GHOST MODE: ACTIVATED",
   "I NEED AN ADULT",
+  "BITS ARE OFF, BACK",
 ];
 
 const TOPIC_EMOJIS = [
@@ -207,7 +243,7 @@ interface Subscription {
 
 type PageState = "lookup" | "create" | "manage";
 
-// ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────
+// ─── TIME UNIT ────────────────────────────────────────────────────────────────
 
 function TimeUnit({
   val,
@@ -243,38 +279,6 @@ function TimeUnit({
   );
 }
 
-function BottomNav({ active }: { active: string }) {
-  const items = [
-    { id: "feed", label: "FEED", icon: "✨" },
-    { id: "explore", label: "EXPLORE", icon: "🔍" },
-    { id: "lazy-list", label: "LAZY LIST", icon: "🛏️" },
-    { id: "profile", label: "PROFILE", icon: "👤" },
-  ];
-  return (
-    <nav className="flex-shrink-0 bg-white border-t border-gray-100 px-2 py-2">
-      <div className="flex items-center justify-around">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-colors ${
-              item.id === active ? "bg-[#aaff00]" : ""
-            }`}
-          >
-            <span className="text-lg leading-none">{item.icon}</span>
-            <span
-              className={`text-[9px] font-black uppercase tracking-wide ${
-                item.id === active ? "text-black" : "text-gray-400"
-              }`}
-            >
-              {item.label}
-            </span>
-          </button>
-        ))}
-      </div>
-    </nav>
-  );
-}
-
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -294,6 +298,8 @@ export default function Home() {
   // Stable random copy picked once per page load
   const copy = useMemo(
     () => ({
+      lookup: pick(TITLES_LOOKUP),
+      go: pick(LOOKUP_BUTTONS),
       create: pick(TITLES_CREATE),
       edit: pick(TITLES_EDIT),
       manage: pick(TITLES_MANAGE),
@@ -403,7 +409,6 @@ export default function Home() {
     if (pageState === "create") {
       setPageState("lookup");
     } else {
-      // editing existing → revert changes
       setIsEditing(false);
       setTopics(subscription?.topics ?? []);
       setTimeState(parseTo12h(subscription?.schedule_time ?? "08:00"));
@@ -424,8 +429,7 @@ export default function Home() {
   if (pageState === "lookup") {
     return (
       <div className="h-screen max-w-sm mx-auto flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-[#0f0f1a] px-5 py-4 flex items-center justify-between flex-shrink-0">
+        <header className="bg-[#0f0f1a] px-5 py-4 flex items-center flex-shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🦥</span>
             <span className="text-white font-black text-base tracking-widest uppercase">
@@ -436,14 +440,10 @@ export default function Home() {
 
         <main className="flex-1 flex flex-col justify-center bg-white px-5 pb-10 gap-6">
           <div>
-            <div className="inline-flex items-center gap-1.5 bg-pink-200 text-pink-700 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide mb-4">
-              ⚡ DAILY BITS
-            </div>
-            <h2 className="text-4xl font-black italic uppercase text-[#aaff00] leading-tight drop-shadow-sm">
-              WHO ARE YOU,{" "}
-              <span className="text-gray-900 not-italic">LAZY?</span>
+            <h2 className="text-4xl font-black italic uppercase text-[#aaff00] leading-tight">
+              {copy.lookup}
             </h2>
-            <p className="text-gray-500 text-sm mt-2">
+            <p className="text-gray-400 text-sm mt-2">
               Enter your email to manage or create your subscription.
             </p>
           </div>
@@ -455,19 +455,17 @@ export default function Home() {
               onChange={(e) => setEmailInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLookup()}
               placeholder="your@email.com"
-              className="w-full bg-white rounded-2xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#aaff00] shadow-sm"
+              className="w-full bg-white border-2 border-gray-200 rounded-2xl px-4 py-4 text-sm focus:outline-none focus:border-[#aaff00] transition-colors"
             />
             <button
               onClick={handleLookup}
               disabled={loading || !emailInput.trim()}
               className="w-full py-4 bg-[#7b2fff] text-white font-black text-sm uppercase tracking-widest rounded-2xl disabled:opacity-40 active:scale-95 transition-transform"
             >
-              {loading ? "CHECKING..." : "LET'S GO ⚡"}
+              {loading ? "CHECKING..." : copy.go}
             </button>
           </div>
         </main>
-
-        <BottomNav active="lazy-list" />
       </div>
     );
   }
@@ -477,28 +475,13 @@ export default function Home() {
   return (
     <div className="h-screen max-w-sm mx-auto flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="bg-[#0f0f1a] px-5 py-4 flex items-center justify-between flex-shrink-0">
+      <header className="bg-[#0f0f1a] px-5 py-4 flex items-center flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-2xl">🦥</span>
           <span className="text-white font-black text-base tracking-widest uppercase">
             LazyBits
           </span>
         </div>
-        <button className="text-white/50 hover:text-white transition-colors">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-        </button>
       </header>
 
       {/* Scrollable body */}
@@ -507,32 +490,27 @@ export default function Home() {
         {banner && (
           <div
             className={`px-4 py-3 rounded-xl text-sm font-bold ${
-              banner.ok
-                ? "bg-[#aaff00] text-black"
-                : "bg-red-100 text-red-700"
+              banner.ok ? "bg-[#aaff00] text-black" : "bg-red-100 text-red-700"
             }`}
           >
             {banner.msg}
           </div>
         )}
 
-        {/* User preferences header */}
+        {/* Title + email */}
         <div>
-          <div className="inline-flex items-center gap-1.5 bg-pink-200 text-pink-700 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide mb-3">
-            ⚙️ USER PREFERENCES
-          </div>
           <h2 className="text-[2rem] font-black italic uppercase text-[#aaff00] leading-tight mb-1">
             {currentTitle}
           </h2>
-          <p className="text-sm text-gray-500">
-            Managing settings for:{" "}
+          <p className="text-sm text-gray-400">
+            Managing bits for:{" "}
             <span className="text-pink-500 font-semibold">{emailInput}</span>
           </p>
         </div>
 
         {/* Add topic card */}
         {canEdit && (
-          <div className="bg-[#e0e0e0] rounded-2xl p-4 space-y-3">
+          <div className="bg-gray-100 rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
               <span>⊕</span>
               <span>ADD SOMETHING NEW TO TRACK</span>
@@ -543,7 +521,7 @@ export default function Home() {
               onChange={(e) => setNewTopic(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addTopic()}
               placeholder="e.g. Price drops for RTX 4080..."
-              className="w-full bg-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#aaff00] placeholder-gray-400"
+              className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#aaff00] transition-colors placeholder-gray-400"
             />
 
             {/* Trending suggestions */}
@@ -554,7 +532,7 @@ export default function Home() {
                     key={i}
                     onClick={() => addTopic(s)}
                     disabled={topics.includes(s)}
-                    className="text-[11px] bg-white/80 text-gray-600 px-2.5 py-1 rounded-full hover:bg-white disabled:opacity-40 transition-colors truncate max-w-[180px] font-medium"
+                    className="text-[11px] bg-white text-gray-500 border border-gray-200 px-2.5 py-1 rounded-full hover:border-[#aaff00] hover:text-black disabled:opacity-40 transition-colors truncate max-w-[180px] font-medium"
                     title={s}
                   >
                     {s}
@@ -566,19 +544,19 @@ export default function Home() {
             <button
               onClick={() => addTopic()}
               disabled={!newTopic.trim()}
-              className="w-full py-3.5 bg-[#aaff00] text-black font-black text-sm uppercase tracking-widest rounded-xl disabled:opacity-40 active:scale-95 transition-transform flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-[#aaff00] text-black font-black text-sm uppercase tracking-widest rounded-xl disabled:opacity-40 active:scale-95 transition-transform"
             >
               ADD ⚡
             </button>
           </div>
         )}
 
-        {/* YOUR CURRENT VIBES */}
+        {/* YOUR CURRENT BITS */}
         {topics.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="font-black text-xs uppercase tracking-widest text-gray-700">
-                YOUR CURRENT VIBES
+                YOUR CURRENT BITS
               </span>
               <span className="text-xs text-gray-400 font-semibold">
                 {topics.length} Topic{topics.length !== 1 ? "s" : ""} Active
@@ -592,7 +570,7 @@ export default function Home() {
                 return (
                   <div
                     key={i}
-                    className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm"
+                    className="bg-white border border-gray-100 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm"
                   >
                     <div
                       className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center text-xl flex-shrink-0`}
@@ -624,25 +602,33 @@ export default function Home() {
 
         {/* Manage actions (view mode only) */}
         {pageState === "manage" && !isEditing && (
-          <div className="flex gap-2">
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex-1 py-3.5 bg-[#aaff00] text-black font-black text-xs uppercase tracking-widest rounded-2xl active:scale-95 transition-transform"
+              >
+                ✏️ EDIT BITS
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={loading}
+                className="flex-1 py-3.5 bg-white text-red-400 font-black text-xs uppercase tracking-widest rounded-2xl border border-red-100 active:scale-95 transition-transform disabled:opacity-40"
+              >
+                💀 CANCEL
+              </button>
+            </div>
             <button
-              onClick={() => setIsEditing(true)}
-              className="flex-1 py-3.5 bg-[#aaff00] text-black font-black text-xs uppercase tracking-widest rounded-2xl active:scale-95 transition-transform"
+              onClick={() => { setPageState("lookup"); setEmailInput(""); }}
+              className="w-full text-xs text-gray-400 hover:text-gray-600 font-semibold py-2 transition-colors"
             >
-              ✏️ EDIT VIBES
-            </button>
-            <button
-              onClick={handleCancel}
-              disabled={loading}
-              className="flex-1 py-3.5 bg-white text-red-400 font-black text-xs uppercase tracking-widest rounded-2xl border border-red-100 active:scale-95 transition-transform disabled:opacity-40"
-            >
-              💀 CANCEL
+              ← Not you? Use a different email
             </button>
           </div>
         )}
 
         {/* Daily Send Time */}
-        <div className="bg-[#e0e0e0] rounded-2xl p-5 space-y-4">
+        <div className="bg-gray-100 rounded-2xl p-5 space-y-4">
           <div className="flex items-start gap-3">
             <span className="text-2xl mt-0.5">🕐</span>
             <div>
@@ -655,60 +641,30 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <TimeUnit
               val={String(timeState.hour).padStart(2, "0")}
-              onUp={() =>
-                setTimeState((s) => ({
-                  ...s,
-                  hour: s.hour === 12 ? 1 : s.hour + 1,
-                }))
-              }
-              onDown={() =>
-                setTimeState((s) => ({
-                  ...s,
-                  hour: s.hour === 1 ? 12 : s.hour - 1,
-                }))
-              }
+              onUp={() => setTimeState((s) => ({ ...s, hour: s.hour === 12 ? 1 : s.hour + 1 }))}
+              onDown={() => setTimeState((s) => ({ ...s, hour: s.hour === 1 ? 12 : s.hour - 1 }))}
               disabled={!canEdit}
             />
-            <span className="text-4xl font-black text-gray-600 pb-1 select-none">
-              :
-            </span>
+            <span className="text-4xl font-black text-gray-600 pb-1 select-none">:</span>
             <TimeUnit
               val={String(timeState.minute).padStart(2, "0")}
-              onUp={() =>
-                setTimeState((s) => ({
-                  ...s,
-                  minute: s.minute >= 55 ? 0 : s.minute + 5,
-                }))
-              }
-              onDown={() =>
-                setTimeState((s) => ({
-                  ...s,
-                  minute: s.minute <= 0 ? 55 : s.minute - 5,
-                }))
-              }
+              onUp={() => setTimeState((s) => ({ ...s, minute: s.minute >= 55 ? 0 : s.minute + 5 }))}
+              onDown={() => setTimeState((s) => ({ ...s, minute: s.minute <= 0 ? 55 : s.minute - 5 }))}
               disabled={!canEdit}
             />
             <div className="flex flex-col gap-1.5 ml-3">
               <button
-                onClick={() =>
-                  canEdit && setTimeState((s) => ({ ...s, isPm: false }))
-                }
+                onClick={() => canEdit && setTimeState((s) => ({ ...s, isPm: false }))}
                 className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wide transition-colors ${
-                  !timeState.isPm
-                    ? "bg-[#aaff00] text-black"
-                    : "bg-white/60 text-gray-400"
+                  !timeState.isPm ? "bg-[#aaff00] text-black" : "bg-white text-gray-400"
                 }`}
               >
                 AM
               </button>
               <button
-                onClick={() =>
-                  canEdit && setTimeState((s) => ({ ...s, isPm: true }))
-                }
+                onClick={() => canEdit && setTimeState((s) => ({ ...s, isPm: true }))}
                 className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wide transition-colors ${
-                  timeState.isPm
-                    ? "bg-[#aaff00] text-black"
-                    : "bg-white/60 text-gray-400"
+                  timeState.isPm ? "bg-[#aaff00] text-black" : "bg-white text-gray-400"
                 }`}
               >
                 PM
@@ -719,8 +675,15 @@ export default function Home() {
 
         {/* Mascot */}
         <div className="flex flex-col items-center py-4 gap-2">
-          <span className="text-5xl">🦥</span>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full bg-[#0f0f1a] flex items-center justify-center shadow-lg ring-4 ring-[#aaff00]/30">
+              <span className="text-4xl">🦥</span>
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#aaff00] flex items-center justify-center text-xs font-black text-black">
+              ⚡
+            </div>
+          </div>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
             LAZYBITS CORE PROTOCOL V2.4
           </p>
         </div>
@@ -728,10 +691,10 @@ export default function Home() {
 
       {/* Sticky bottom panel (only in edit/create mode) */}
       {canEdit && (
-        <div className="flex-shrink-0 bg-white border-t border-gray-200 px-4 pt-3 pb-2 space-y-2">
+        <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 pt-3 pb-3 space-y-2">
           <button
             onClick={handleBack}
-            className="w-full py-4 bg-gray-300 text-gray-700 font-black text-sm uppercase tracking-widest rounded-2xl active:scale-95 transition-transform"
+            className="w-full py-4 bg-gray-200 text-gray-700 font-black text-sm uppercase tracking-widest rounded-2xl active:scale-95 transition-transform"
           >
             {copy.back}
           </button>
@@ -744,8 +707,6 @@ export default function Home() {
           </button>
         </div>
       )}
-
-      <BottomNav active="lazy-list" />
     </div>
   );
 }
