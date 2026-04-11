@@ -1,391 +1,371 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-interface Config {
-  topics: string[];
-  email: string;
-  scheduleTime: string;
-}
-
-interface Summary {
+interface Subscription {
   id: string;
-  generatedAt: string;
-  content: string;
-  emailSent: boolean;
-  emailTo: string;
+  email: string;
+  topics: string[];
+  schedule_time: string;
+  active: boolean;
 }
 
-interface NewsItem {
-  headline: string;
-  source: string;
-  link: string;
-  pubDate: string;
-  snippet: string;
-}
-
-interface TopicNews {
-  topic: string;
-  items: NewsItem[];
-  error?: string;
-}
-
-function SummaryContent({ content }: { content: string }) {
-  let news: TopicNews[] | null = null;
-  try {
-    news = JSON.parse(content) as TopicNews[];
-  } catch {
-    // Legacy plain-text format
-  }
-
-  if (!news) {
-    return (
-      <p className="text-sm text-gray-500 italic">
-        (Legacy summary — plain text not renderable)
-      </p>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {news.map((t, ti) => (
-        <div key={ti}>
-          <h3 className="font-semibold text-indigo-700 text-base mb-3 pb-1 border-b border-gray-100">
-            {t.topic}
-          </h3>
-          {t.error ? (
-            <p className="text-sm text-red-500">Could not fetch: {t.error}</p>
-          ) : t.items.length === 0 ? (
-            <p className="text-sm text-gray-400">No headlines found.</p>
-          ) : (
-            <ul className="space-y-3">
-              {t.items.map((item, ii) => (
-                <li key={ii}>
-                  <a
-                    href={item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-gray-900 hover:text-indigo-600 transition-colors"
-                  >
-                    {item.headline}
-                  </a>
-                  <div className="text-xs text-gray-400 mt-0.5">
-                    {item.source}
-                    {item.pubDate && (
-                      <>
-                        {" · "}
-                        {new Date(item.pubDate).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </>
-                    )}
-                  </div>
-                  {item.snippet && (
-                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                      {item.snippet}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
+type PageState = "lookup" | "create" | "manage" | "edit";
 
 export default function Home() {
-  const [config, setConfig] = useState<Config>({
-    topics: [],
-    email: "",
-    scheduleTime: "08:00",
-  });
-  const [summaries, setSummaries] = useState<Summary[]>([]);
+  const [pageState, setPageState] = useState<PageState>("lookup");
+  const [emailInput, setEmailInput] = useState("");
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [topics, setTopics] = useState<string[]>([]);
   const [newTopic, setNewTopic] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [banner, setBanner] = useState<{ msg: string; ok: boolean } | null>(
-    null
-  );
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [savingConfig, setSavingConfig] = useState(false);
+  const [scheduleTime, setScheduleTime] = useState("08:00");
+  const [loading, setLoading] = useState(false);
+  const [banner, setBanner] = useState<{ msg: string; ok: boolean } | null>(null);
 
-  useEffect(() => {
-    fetch("/api/topics")
-      .then((r) => r.json())
-      .then(setConfig);
-    fetch("/api/summaries")
-      .then((r) => r.json())
-      .then(setSummaries);
-  }, []);
-
-  async function persistConfig(patch: Partial<Config>) {
-    const updated = { ...config, ...patch };
-    setConfig(updated);
-    setSavingConfig(true);
-    await fetch("/api/topics", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updated),
-    });
-    setSavingConfig(false);
+  function showBanner(msg: string, ok: boolean) {
+    setBanner({ msg, ok });
+    setTimeout(() => setBanner(null), 4000);
   }
 
-  function addTopic() {
-    const trimmed = newTopic.trim();
-    if (!trimmed || config.topics.includes(trimmed)) return;
-    persistConfig({ topics: [...config.topics, trimmed] });
-    setNewTopic("");
-  }
-
-  function removeTopic(idx: number) {
-    persistConfig({ topics: config.topics.filter((_, i) => i !== idx) });
-  }
-
-  async function handleGenerate() {
-    setIsGenerating(true);
-    setBanner(null);
+  async function handleLookup() {
+    if (!emailInput.trim()) return;
+    setLoading(true);
     try {
-      const res = await fetch("/api/generate", { method: "POST" });
-      const data = (await res.json()) as {
-        success: boolean;
-        emailSent?: boolean;
-        error?: string;
-      };
-      if (data.success) {
-        setBanner({
-          msg: data.emailSent
-            ? "Summary generated and email sent!"
-            : "Summary generated (no email address set).",
-          ok: true,
-        });
-        fetch("/api/summaries")
-          .then((r) => r.json())
-          .then(setSummaries);
+      const res = await fetch(`/api/subscription?email=${encodeURIComponent(emailInput)}`);
+      const data = await res.json() as { exists: boolean; subscription?: Subscription };
+      if (data.exists && data.subscription) {
+        setSubscription(data.subscription);
+        setTopics(data.subscription.topics);
+        setScheduleTime(data.subscription.schedule_time);
+        setPageState("manage");
       } else {
-        setBanner({ msg: data.error ?? "Unknown error", ok: false });
+        setTopics([]);
+        setScheduleTime("08:00");
+        setPageState("create");
       }
     } catch {
-      setBanner({ msg: "Request failed — is the server running?", ok: false });
+      showBanner("Something went wrong. Please try again.", false);
     } finally {
-      setIsGenerating(false);
+      setLoading(false);
     }
   }
 
-  const nextRun = (() => {
-    const [h, m] = config.scheduleTime.split(":").map(Number);
-    const now = new Date();
-    const next = new Date(now);
-    next.setHours(h, m, 0, 0);
-    if (next <= now) next.setDate(next.getDate() + 1);
-    return next.toLocaleString("en-US", {
-      weekday: "short",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  })();
+  async function handleSave() {
+    if (topics.length === 0) {
+      showBanner("Add at least one topic.", false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailInput, topics, scheduleTime }),
+      });
+      const data = await res.json() as { subscription: Subscription };
+      setSubscription(data.subscription);
+      setPageState("manage");
+      showBanner(
+        pageState === "create"
+          ? "Subscription created! You'll receive your first digest at " + scheduleTime
+          : "Subscription updated!",
+        true
+      );
+    } catch {
+      showBanner("Something went wrong. Please try again.", false);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!confirm("Are you sure you want to cancel your subscription?")) return;
+    setLoading(true);
+    try {
+      await fetch(`/api/subscription?email=${encodeURIComponent(emailInput)}`, {
+        method: "DELETE",
+      });
+      setSubscription(null);
+      setPageState("lookup");
+      setEmailInput("");
+      showBanner("Subscription cancelled.", true);
+    } catch {
+      showBanner("Something went wrong. Please try again.", false);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function addTopic() {
+    const t = newTopic.trim();
+    if (!t || topics.includes(t)) return;
+    setTopics([...topics, t]);
+    setNewTopic("");
+  }
+
+  function removeTopic(i: number) {
+    setTopics(topics.filter((_, idx) => idx !== i));
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <span className="text-2xl font-bold text-indigo-600">
-              LazyBits
-            </span>
-            <span className="ml-3 text-sm text-gray-400">
-              Next run: {nextRun}
-            </span>
-          </div>
-          <button
-            onClick={handleGenerate}
-            disabled={isGenerating || config.topics.length === 0}
-            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg
-                       hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed
-                       transition-colors flex items-center gap-2"
-          >
-            {isGenerating && (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            )}
-            {isGenerating ? "Generating…" : "Generate & Send Now"}
-          </button>
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-lg mx-auto px-6 py-5">
+          <h1 className="text-2xl font-bold text-indigo-600">LazyBits</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Your daily news digest</p>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+      <main className="flex-1 max-w-lg mx-auto w-full px-6 py-10 space-y-6">
         {/* Banner */}
         {banner && (
-          <div
-            className={`px-4 py-3 rounded-lg text-sm font-medium ${
-              banner.ok
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
-            }`}
-          >
-            {banner.ok ? "✓ " : "✗ "}
-            {banner.msg}
+          <div className={`px-4 py-3 rounded-lg text-sm font-medium ${
+            banner.ok
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+          }`}>
+            {banner.ok ? "✓ " : "✗ "}{banner.msg}
           </div>
         )}
 
-        {/* Config grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Topics */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-            <h2 className="font-semibold text-gray-900">Topics to Track</h2>
-            <div className="flex gap-2">
+        {/* LOOKUP */}
+        {pageState === "lookup" && (
+          <div className="bg-white rounded-xl border border-gray-200 p-8 space-y-5">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Manage your digest</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Enter your email to view or create your subscription.
+              </p>
+            </div>
+            <div className="space-y-3">
               <input
-                type="text"
-                value={newTopic}
-                onChange={(e) => setNewTopic(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addTopic()}
-                placeholder="e.g. AI news, crypto, climate…"
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLookup()}
+                placeholder="you@example.com"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
                            focus:outline-none focus:ring-2 focus:ring-indigo-400"
               />
               <button
-                onClick={addTopic}
-                disabled={!newTopic.trim()}
-                className="px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg
-                           hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                onClick={handleLookup}
+                disabled={loading || !emailInput.trim()}
+                className="w-full py-2.5 bg-indigo-600 text-white text-sm font-medium
+                           rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
               >
-                Add
+                {loading ? "Looking up…" : "Continue →"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* CREATE */}
+        {pageState === "create" && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Create subscription</h2>
+                <p className="text-sm text-gray-500 mt-0.5">{emailInput}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Topics</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newTopic}
+                    onChange={(e) => setNewTopic(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addTopic()}
+                    placeholder="e.g. AI, crypto, climate…"
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                  <button
+                    onClick={addTopic}
+                    disabled={!newTopic.trim()}
+                    className="px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg
+                               hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+                <ul className="mt-2 space-y-1.5">
+                  {topics.map((t, i) => (
+                    <li key={i} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                      <span className="text-sm text-gray-700">{t}</span>
+                      <button onClick={() => removeTopic(i)} className="text-gray-400 hover:text-red-500 text-lg leading-none">×</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Daily send time</label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm
+                             focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPageState("lookup")}
+                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm
+                           font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                ← Back
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={loading || topics.length === 0}
+                className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium
+                           rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+              >
+                {loading ? "Saving…" : "Subscribe"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* MANAGE */}
+        {pageState === "manage" && subscription && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Your subscription</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">{subscription.email}</p>
+                </div>
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                  Active
+                </span>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Topics</p>
+                <div className="flex flex-wrap gap-2">
+                  {subscription.topics.map((t, i) => (
+                    <span key={i} className="bg-indigo-50 text-indigo-700 text-sm px-3 py-1 rounded-full">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Daily send time</p>
+                <p className="text-sm text-gray-700">
+                  {new Date(`2000-01-01T${subscription.schedule_time}`).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancel}
+                disabled={loading}
+                className="flex-1 py-2.5 border border-red-200 text-red-600 text-sm
+                           font-medium rounded-lg hover:bg-red-50 transition-colors"
+              >
+                Cancel subscription
+              </button>
+              <button
+                onClick={() => setPageState("edit")}
+                className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium
+                           rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Edit
               </button>
             </div>
 
-            {config.topics.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-6">
-                No topics yet — add one above.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {config.topics.map((topic, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2"
-                  >
-                    <span className="text-sm text-gray-700">{topic}</span>
-                    <button
-                      onClick={() => removeTopic(i)}
-                      className="text-gray-400 hover:text-red-500 transition-colors text-lg leading-none ml-2"
-                      aria-label={`Remove ${topic}`}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <button
+              onClick={() => { setPageState("lookup"); setEmailInput(""); }}
+              className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              ← Use a different email
+            </button>
           </div>
+        )}
 
-          {/* Settings */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
-            <h2 className="font-semibold text-gray-900">Settings</h2>
+        {/* EDIT */}
+        {pageState === "edit" && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Edit subscription</h2>
+                <p className="text-sm text-gray-500 mt-0.5">{emailInput}</p>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email address
-              </label>
-              <input
-                type="email"
-                value={config.email}
-                onChange={(e) => setConfig((c) => ({ ...c, email: e.target.value }))}
-                onBlur={() => persistConfig({ email: config.email })}
-                placeholder="you@example.com"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Daily send time (local)
-              </label>
-              <input
-                type="time"
-                value={config.scheduleTime}
-                onChange={(e) => persistConfig({ scheduleTime: e.target.value })}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-            </div>
-
-            {savingConfig && (
-              <p className="text-xs text-gray-400">Saving…</p>
-            )}
-
-            <div className="bg-indigo-50 rounded-lg p-3 text-xs text-indigo-700 space-y-1">
-              <p className="font-medium">Optional: email in .env.local</p>
-              <p>RESEND_API_KEY — for sending emails</p>
-              <p>RESEND_FROM_EMAIL — sender address</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Summaries */}
-        <div>
-          <h2 className="font-semibold text-gray-900 mb-4">
-            Recent Summaries
-            {summaries.length > 0 && (
-              <span className="ml-2 text-xs text-gray-400 font-normal">
-                ({summaries.length})
-              </span>
-            )}
-          </h2>
-
-          {summaries.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-400 text-sm">
-              No summaries yet. Configure your topics and hit{" "}
-              <span className="font-medium text-gray-500">
-                Generate &amp; Send Now
-              </span>
-              .
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {summaries.map((s) => (
-                <div
-                  key={s.id}
-                  className="bg-white rounded-xl border border-gray-200 overflow-hidden"
-                >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Topics</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newTopic}
+                    onChange={(e) => setNewTopic(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addTopic()}
+                    placeholder="Add a topic…"
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
                   <button
-                    onClick={() =>
-                      setExpanded(expanded === s.id ? null : s.id)
-                    }
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+                    onClick={addTopic}
+                    disabled={!newTopic.trim()}
+                    className="px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg
+                               hover:bg-indigo-700 disabled:opacity-40 transition-colors"
                   >
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-sm font-medium text-gray-900">
-                        {new Date(s.generatedAt).toLocaleString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                      {s.emailSent && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                          Sent → {s.emailTo}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-gray-400 text-xs ml-4 shrink-0">
-                      {expanded === s.id ? "▲ hide" : "▼ show"}
-                    </span>
+                    Add
                   </button>
-
-                  {expanded === s.id && (
-                    <div className="px-6 pb-6 border-t border-gray-100 pt-4">
-                      <SummaryContent content={s.content} />
-                    </div>
-                  )}
                 </div>
-              ))}
+                <ul className="mt-2 space-y-1.5">
+                  {topics.map((t, i) => (
+                    <li key={i} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                      <span className="text-sm text-gray-700">{t}</span>
+                      <button onClick={() => removeTopic(i)} className="text-gray-400 hover:text-red-500 text-lg leading-none">×</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Daily send time</label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm
+                             focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
+              </div>
             </div>
-          )}
-        </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPageState("manage")}
+                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm
+                           font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                ← Back
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={loading || topics.length === 0}
+                className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium
+                           rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+              >
+                {loading ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
