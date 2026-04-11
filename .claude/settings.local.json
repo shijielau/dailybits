@@ -9,7 +9,8 @@
       "Read(//opt/homebrew/bin/**)",
       "Bash(command -v npm)",
       "Read(//opt/homebrew/**)",
-      "Bash(export PATH=\"/Users/shijielau/.gemini/antigravity/scratch/tools/node-v20.11.1-darwin-arm64/bin:$PATH\")"
+      "Bash(export PATH=\"/Users/shijielau/.gemini/antigravity/scratch/tools/node-v20.11.1-darwin-arm64/bin:$PATH\")",
+      "WebFetch(domain:stitch.withgoogle.com)"
     ]
   }
 }

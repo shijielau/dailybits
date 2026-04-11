@@ -1,6 +1,201 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+
+// ─── COPY BANKS ───────────────────────────────────────────────────────────────
+
+const TITLES_CREATE = [
+  "HEY GET YO LAZY ASS HERE!",
+  "WAKE UP & SMELL THE NEWS!",
+  "YO, WHAT DO YOU EVEN CARE ABOUT?",
+  "TELL ME YOUR OBSESSIONS!",
+  "NEW HERE? SPILL YOUR INTERESTS!",
+  "OOH A FRESH LAZY, HOW CUTE!",
+  "STEP RIGHT UP, GET YO BITS!",
+  "SPILL THE TEA ON YOUR VIBES!",
+  "YOU LOOK LIKE SOMEONE WHO LOVES NEWS!",
+  "YOUR DAILY DOSE STARTS HERE!",
+  "TIME TO GET YOURSELF INFORMED!",
+  "LAZY? WE GOT YOU COVERED!",
+  "WHAT'S POPPIN IN YOUR WORLD?",
+  "DON'T BE SHY, TELL ME EVERYTHING!",
+  "GET READY TO BE IN THE KNOW!",
+  "LET'S BUILD YOUR LAZY FEED!",
+  "FUTURE YOU WILL THANK PRESENT YOU!",
+  "ANOTHER LAZY JOINS THE SQUAD!",
+  "NO CAP, THIS WILL CHANGE YOUR LIFE!",
+  "IT'S GIVING... INFORMED LAZY!",
+];
+
+const TITLES_EDIT = [
+  "EDIT YOUR LAZY LIST YOU LAZY ASS",
+  "CHANGING YOUR MIND AGAIN??",
+  "ALRIGHT ALRIGHT, WHAT CHANGED?",
+  "BACK FOR MORE TWEAKS, HUH?",
+  "YOU'RE NEVER SATISFIED ARE YOU 😤",
+  "FINE, LET'S UPDATE YOUR VIBES",
+  "STILL ALIVE? GOOD. EDIT AWAY.",
+  "YOUR PREFERENCES, YOUR RULES I GUESS",
+  "OK BOSS, WHAT ARE WE CHANGING?",
+  "REFRESH YOUR LAZY FEED!",
+  "PLOT TWIST: YOU'RE EDITING!",
+  "GLOW UP YOUR SUBSCRIPTION!",
+  "MID-SEASON CORRECTIONS, I SEE",
+  "CHARACTER DEVELOPMENT INCOMING!",
+  "UPDATING THE LAZY PROTOCOL...",
+  "ANOTHER VIBE SHIFT, HUH?",
+  "THE GIRLIES ARE PIVOTING!",
+  "OKAY OKAY, NEW PHONE WHO DIS",
+  "MAIN CHARACTER ENERGY: EDITING",
+  "ERA CHANGE DETECTED 🚨",
+];
+
+const TITLES_MANAGE = [
+  "YO WELCOME BACK LAZY!",
+  "LOOK WHO SHOWED UP!",
+  "YOUR LAZY LIST, AS REQUESTED!",
+  "AYY IT'S YOU AGAIN!",
+  "YOUR COMMAND CENTER IS READY!",
+  "ALRIGHT LET'S SEE YOUR STUFF!",
+  "YOUR DAILY BITS HQ!",
+  "OH HEY STRANGER!",
+  "THE LAZY LEGEND RETURNS!",
+  "WASSUP, YOUR SETTINGS ARE LIVE!",
+  "YOUR VIBE CHECK IS READY!",
+  "ACTIVE AND LAZY, AS IT SHOULD BE!",
+  "YOUR BITS ARE SAFE AND SOUND!",
+  "CURRENTLY SERVING: YOUR LAZY ASS",
+  "WELCOME BACK TO THE LAZY SIDE!",
+  "AH YES, THE CHOSEN ONE RETURNS",
+  "YOUR FEED AWAITS, LAZY KING/QUEEN!",
+  "BACK IN ACTION, I SEE!",
+  "THE LEGEND LOGS BACK IN!",
+  "PRESENCE DETECTED. GREETINGS.",
+];
+
+const SAVE_BUTTONS = [
+  "LFG, SAVE IT!",
+  "HECK YEAH, DO IT!",
+  "YAS QUEEN, SAVE!",
+  "LOCK IT IN!",
+  "LETS GOOO 🚀",
+  "SHIP IT!",
+  "DO THE THING!",
+  "MAKE IT HAPPEN!",
+  "YOLO, SAVE!",
+  "SLAY AND SAVE!",
+  "BET, SAVING NOW!",
+  "NO CAP, SAVE THIS!",
+  "FR FR LOCK IT IN!",
+  "IT'S GIVING... SAVED!",
+  "MANIFESTING YOUR BITS!",
+  "SAVING THIS MASTERPIECE!",
+  "COMMIT AND PUSH! 🧑‍💻",
+  "YASSS KING/QUEEN!",
+  "THIS SLAPS, SAVE IT!",
+  "OK BESTIE, SAVING!",
+  "BASED. SAVING.",
+  "SEND IT! 🔥",
+  "GOATED SAVE RIGHT HERE!",
+  "THE PROPHECY IS FULFILLED!",
+  "MISSION ACCOMPLISHED 🫡",
+  "RIZZ LOCKED IN!",
+  "W MOVE, SAVING!",
+  "ABSOLUTE UNIT OF A SAVE",
+  "POG. SAVING.",
+  "VERY DEMURE, VERY MINDFUL. SAVING.",
+];
+
+const BACK_BUTTONS = [
+  "NAH, GO BACK",
+  "NOPE, I'M OUT ✌️",
+  "ABORT MISSION",
+  "EHH MAYBE LATER",
+  "NEVER MIND BRO",
+  "TAKE ME BACK!",
+  "I CHANGED MY MIND",
+  "WAIT WAIT WAIT",
+  "NOT TODAY SATAN",
+  "RETREAT! RETREAT!",
+  "LEMME THINK MORE",
+  "LOL NO THANKS",
+  "BACK TO SAFETY",
+  "NOPE NAH NO WAY",
+  "I'M SCARED, GO BACK",
+  "ACTUALLY WAIT",
+  "HOLD UP HOLD UP",
+  "MY MOM IS CALLING",
+  "PRETEND I WASN'T HERE",
+  "VIBES ARE OFF, BACK",
+  "NOT FEELING IT RN",
+  "CHANGED MY MIND BESTIE",
+  "RUN AWAY! 🏃",
+  "ERROR 404: MOTIVATION LOST",
+  "LET ME COOK A BIT MORE",
+  "SKILL ISSUE, GOING BACK",
+  "TOUCH GRASS FIRST",
+  "COWARDLY RETREATING...",
+  "GHOST MODE: ACTIVATED",
+  "I NEED AN ADULT",
+];
+
+const TOPIC_EMOJIS = [
+  "💰", "🎮", "🎬", "🤖", "🏀", "🎵", "🌍", "🚀",
+  "💡", "🔥", "⚡", "🎯", "🎪", "🦊", "🌟", "💎",
+  "🏆", "🎨", "🍕", "🐉", "🦋", "🌈", "🎭", "🤑",
+  "🧠", "👾", "🛸", "🪄", "🏄", "🦁",
+];
+
+const TOPIC_TAGS = [
+  "PRIORITY: HIGH", "FAN ALERT", "DEV MODE", "WATCH LIST", "OBSESSED",
+  "STAYING INFORMED", "NERD ALERT", "HYPE TRAIN", "DEEP DIVE", "ON MY RADAR",
+  "MAIN CHARACTER", "CORE INTEREST", "CANNOT MISS", "BIG BRAIN ENERGY",
+  "CERTIFIED BANGER", "ABSOLUTELY ESSENTIAL", "LIVING FOR THIS",
+  "DAILY CHECK-IN", "HYPERFIXATION", "NO SKIP", "LOCKED IN",
+];
+
+const TOPIC_ICON_BG = [
+  "bg-pink-200", "bg-blue-200", "bg-green-200", "bg-yellow-200",
+  "bg-purple-200", "bg-orange-200", "bg-teal-200", "bg-red-200",
+  "bg-indigo-200", "bg-emerald-200", "bg-fuchsia-200", "bg-amber-200",
+];
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+function hashStr(s: string): number {
+  let h = 0;
+  for (const c of s) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
+  return Math.abs(h);
+}
+
+function pickBy<T>(arr: T[], seed: string): T {
+  return arr[hashStr(seed) % arr.length];
+}
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ─── TIME HELPERS ──────────────────────────────────────────────────────────────
+
+function parseTo12h(time24: string): { hour: number; minute: number; isPm: boolean } {
+  const [hStr, mStr] = (time24 || "08:00").split(":");
+  let h = parseInt(hStr, 10);
+  const m = parseInt(mStr, 10);
+  const isPm = h >= 12;
+  if (h === 0) h = 12;
+  else if (h > 12) h -= 12;
+  return { hour: h, minute: m, isPm };
+}
+
+function to24h(hour: number, minute: number, isPm: boolean): string {
+  let h = hour;
+  if (isPm && h !== 12) h += 12;
+  if (!isPm && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+// ─── TYPES ────────────────────────────────────────────────────────────────────
 
 interface Subscription {
   id: string;
@@ -10,7 +205,77 @@ interface Subscription {
   active: boolean;
 }
 
-type PageState = "lookup" | "create" | "manage" | "edit";
+type PageState = "lookup" | "create" | "manage";
+
+// ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────
+
+function TimeUnit({
+  val,
+  onUp,
+  onDown,
+  disabled,
+}: {
+  val: string;
+  onUp: () => void;
+  onDown: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center">
+      <button
+        onClick={onUp}
+        disabled={disabled}
+        className="text-gray-400 hover:text-gray-700 disabled:opacity-0 font-bold py-1 text-sm leading-none select-none"
+      >
+        ▲
+      </button>
+      <span className="text-5xl font-black text-gray-900 w-14 text-center tabular-nums leading-none my-1">
+        {val}
+      </span>
+      <button
+        onClick={onDown}
+        disabled={disabled}
+        className="text-gray-400 hover:text-gray-700 disabled:opacity-0 font-bold py-1 text-sm leading-none select-none"
+      >
+        ▼
+      </button>
+    </div>
+  );
+}
+
+function BottomNav({ active }: { active: string }) {
+  const items = [
+    { id: "feed", label: "FEED", icon: "✨" },
+    { id: "explore", label: "EXPLORE", icon: "🔍" },
+    { id: "lazy-list", label: "LAZY LIST", icon: "🛏️" },
+    { id: "profile", label: "PROFILE", icon: "👤" },
+  ];
+  return (
+    <nav className="flex-shrink-0 bg-white border-t border-gray-100 px-2 py-2">
+      <div className="flex items-center justify-around">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-colors ${
+              item.id === active ? "bg-[#aaff00]" : ""
+            }`}
+          >
+            <span className="text-lg leading-none">{item.icon}</span>
+            <span
+              className={`text-[9px] font-black uppercase tracking-wide ${
+                item.id === active ? "text-black" : "text-gray-400"
+              }`}
+            >
+              {item.label}
+            </span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 export default function Home() {
   const [pageState, setPageState] = useState<PageState>("lookup");
@@ -18,9 +283,33 @@ export default function Home() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [topics, setTopics] = useState<string[]>([]);
   const [newTopic, setNewTopic] = useState("");
-  const [scheduleTime, setScheduleTime] = useState("08:00");
   const [loading, setLoading] = useState(false);
   const [banner, setBanner] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [timeState, setTimeState] = useState(() => parseTo12h("08:00"));
+
+  const scheduleTime = to24h(timeState.hour, timeState.minute, timeState.isPm);
+
+  // Stable random copy picked once per page load
+  const copy = useMemo(
+    () => ({
+      create: pick(TITLES_CREATE),
+      edit: pick(TITLES_EDIT),
+      manage: pick(TITLES_MANAGE),
+      save: pick(SAVE_BUTTONS),
+      back: pick(BACK_BUTTONS),
+    }),
+    []
+  );
+
+  // Fetch trending topics on mount
+  useEffect(() => {
+    fetch("/api/trending")
+      .then((r) => r.json())
+      .then((d) => setSuggestions((d.topics || []).slice(0, 8)))
+      .catch(() => {});
+  }, []);
 
   function showBanner(msg: string, ok: boolean) {
     setBanner({ msg, ok });
@@ -31,16 +320,23 @@ export default function Home() {
     if (!emailInput.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/subscription?email=${encodeURIComponent(emailInput)}`);
-      const data = await res.json() as { exists: boolean; subscription?: Subscription };
+      const res = await fetch(
+        `/api/subscription?email=${encodeURIComponent(emailInput)}`
+      );
+      const data = (await res.json()) as {
+        exists: boolean;
+        subscription?: Subscription;
+      };
       if (data.exists && data.subscription) {
         setSubscription(data.subscription);
         setTopics(data.subscription.topics);
-        setScheduleTime(data.subscription.schedule_time);
+        setTimeState(parseTo12h(data.subscription.schedule_time));
+        setIsEditing(false);
         setPageState("manage");
       } else {
         setTopics([]);
-        setScheduleTime("08:00");
+        setTimeState(parseTo12h("08:00"));
+        setIsEditing(true);
         setPageState("create");
       }
     } catch {
@@ -52,7 +348,7 @@ export default function Home() {
 
   async function handleSave() {
     if (topics.length === 0) {
-      showBanner("Add at least one topic.", false);
+      showBanner("Add at least one topic first!", false);
       return;
     }
     setLoading(true);
@@ -62,15 +358,11 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailInput, topics, scheduleTime }),
       });
-      const data = await res.json() as { subscription: Subscription };
+      const data = (await res.json()) as { subscription: Subscription };
       setSubscription(data.subscription);
+      setIsEditing(false);
       setPageState("manage");
-      showBanner(
-        pageState === "create"
-          ? "Subscription created! You'll receive your first digest at " + scheduleTime
-          : "Subscription updated!",
-        true
-      );
+      showBanner("Saved! Your lazy feed is live 🎉", true);
     } catch {
       showBanner("Something went wrong. Please try again.", false);
     } finally {
@@ -79,7 +371,7 @@ export default function Home() {
   }
 
   async function handleCancel() {
-    if (!confirm("Are you sure you want to cancel your subscription?")) return;
+    if (!confirm("Cancel your subscription? You can always come back!")) return;
     setLoading(true);
     try {
       await fetch(`/api/subscription?email=${encodeURIComponent(emailInput)}`, {
@@ -88,7 +380,7 @@ export default function Home() {
       setSubscription(null);
       setPageState("lookup");
       setEmailInput("");
-      showBanner("Subscription cancelled.", true);
+      showBanner("Subscription cancelled. Come back anytime!", true);
     } catch {
       showBanner("Something went wrong. Please try again.", false);
     } finally {
@@ -96,277 +388,364 @@ export default function Home() {
     }
   }
 
-  function addTopic() {
-    const t = newTopic.trim();
-    if (!t || topics.includes(t)) return;
-    setTopics([...topics, t]);
-    setNewTopic("");
+  function addTopic(t?: string) {
+    const topic = (t ?? newTopic).trim();
+    if (!topic || topics.includes(topic)) return;
+    setTopics([...topics, topic]);
+    if (!t) setNewTopic("");
   }
 
   function removeTopic(i: number) {
     setTopics(topics.filter((_, idx) => idx !== i));
   }
 
+  function handleBack() {
+    if (pageState === "create") {
+      setPageState("lookup");
+    } else {
+      // editing existing → revert changes
+      setIsEditing(false);
+      setTopics(subscription?.topics ?? []);
+      setTimeState(parseTo12h(subscription?.schedule_time ?? "08:00"));
+    }
+  }
+
+  const canEdit = pageState === "create" || isEditing;
+
+  const currentTitle =
+    pageState === "create"
+      ? copy.create
+      : isEditing
+      ? copy.edit
+      : copy.manage;
+
+  // ── LOOKUP SCREEN ─────────────────────────────────────────────────────────
+
+  if (pageState === "lookup") {
+    return (
+      <div className="h-screen max-w-sm mx-auto flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="bg-[#0f0f1a] px-5 py-4 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🦥</span>
+            <span className="text-white font-black text-base tracking-widest uppercase">
+              LazyBits
+            </span>
+          </div>
+        </header>
+
+        <main className="flex-1 flex flex-col justify-center bg-white px-5 pb-10 gap-6">
+          <div>
+            <div className="inline-flex items-center gap-1.5 bg-pink-200 text-pink-700 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide mb-4">
+              ⚡ DAILY BITS
+            </div>
+            <h2 className="text-4xl font-black italic uppercase text-[#aaff00] leading-tight drop-shadow-sm">
+              WHO ARE YOU,{" "}
+              <span className="text-gray-900 not-italic">LAZY?</span>
+            </h2>
+            <p className="text-gray-500 text-sm mt-2">
+              Enter your email to manage or create your subscription.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <input
+              type="email"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleLookup()}
+              placeholder="your@email.com"
+              className="w-full bg-white rounded-2xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#aaff00] shadow-sm"
+            />
+            <button
+              onClick={handleLookup}
+              disabled={loading || !emailInput.trim()}
+              className="w-full py-4 bg-[#7b2fff] text-white font-black text-sm uppercase tracking-widest rounded-2xl disabled:opacity-40 active:scale-95 transition-transform"
+            >
+              {loading ? "CHECKING..." : "LET'S GO ⚡"}
+            </button>
+          </div>
+        </main>
+
+        <BottomNav active="lazy-list" />
+      </div>
+    );
+  }
+
+  // ── MAIN SCREEN (create / manage / edit) ──────────────────────────────────
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-screen max-w-sm mx-auto flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-lg mx-auto px-6 py-5">
-          <h1 className="text-2xl font-bold text-indigo-600">LazyBits</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Your daily news digest</p>
+      <header className="bg-[#0f0f1a] px-5 py-4 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">🦥</span>
+          <span className="text-white font-black text-base tracking-widest uppercase">
+            LazyBits
+          </span>
         </div>
+        <button className="text-white/50 hover:text-white transition-colors">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </button>
       </header>
 
-      <main className="flex-1 max-w-lg mx-auto w-full px-6 py-10 space-y-6">
+      {/* Scrollable body */}
+      <main className="flex-1 overflow-y-auto bg-white px-4 pt-5 pb-4 space-y-4">
         {/* Banner */}
         {banner && (
-          <div className={`px-4 py-3 rounded-lg text-sm font-medium ${
-            banner.ok
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}>
-            {banner.ok ? "✓ " : "✗ "}{banner.msg}
+          <div
+            className={`px-4 py-3 rounded-xl text-sm font-bold ${
+              banner.ok
+                ? "bg-[#aaff00] text-black"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {banner.msg}
           </div>
         )}
 
-        {/* LOOKUP */}
-        {pageState === "lookup" && (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 space-y-5">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Manage your digest</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Enter your email to view or create your subscription.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="email"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLookup()}
-                placeholder="you@example.com"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              />
-              <button
-                onClick={handleLookup}
-                disabled={loading || !emailInput.trim()}
-                className="w-full py-2.5 bg-indigo-600 text-white text-sm font-medium
-                           rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
-              >
-                {loading ? "Looking up…" : "Continue →"}
-              </button>
-            </div>
+        {/* User preferences header */}
+        <div>
+          <div className="inline-flex items-center gap-1.5 bg-pink-200 text-pink-700 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide mb-3">
+            ⚙️ USER PREFERENCES
           </div>
-        )}
+          <h2 className="text-[2rem] font-black italic uppercase text-[#aaff00] leading-tight mb-1">
+            {currentTitle}
+          </h2>
+          <p className="text-sm text-gray-500">
+            Managing settings for:{" "}
+            <span className="text-pink-500 font-semibold">{emailInput}</span>
+          </p>
+        </div>
 
-        {/* CREATE */}
-        {pageState === "create" && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Create subscription</h2>
-                <p className="text-sm text-gray-500 mt-0.5">{emailInput}</p>
-              </div>
+        {/* Add topic card */}
+        {canEdit && (
+          <div className="bg-[#e0e0e0] rounded-2xl p-4 space-y-3">
+            <div className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
+              <span>⊕</span>
+              <span>ADD SOMETHING NEW TO TRACK</span>
+            </div>
+            <input
+              type="text"
+              value={newTopic}
+              onChange={(e) => setNewTopic(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addTopic()}
+              placeholder="e.g. Price drops for RTX 4080..."
+              className="w-full bg-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#aaff00] placeholder-gray-400"
+            />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Topics</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newTopic}
-                    onChange={(e) => setNewTopic(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addTopic()}
-                    placeholder="e.g. AI, crypto, climate…"
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  />
+            {/* Trending suggestions */}
+            {suggestions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {suggestions.map((s, i) => (
                   <button
-                    onClick={addTopic}
-                    disabled={!newTopic.trim()}
-                    className="px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg
-                               hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                    key={i}
+                    onClick={() => addTopic(s)}
+                    disabled={topics.includes(s)}
+                    className="text-[11px] bg-white/80 text-gray-600 px-2.5 py-1 rounded-full hover:bg-white disabled:opacity-40 transition-colors truncate max-w-[180px] font-medium"
+                    title={s}
                   >
-                    Add
+                    {s}
                   </button>
-                </div>
-                <ul className="mt-2 space-y-1.5">
-                  {topics.map((t, i) => (
-                    <li key={i} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
-                      <span className="text-sm text-gray-700">{t}</span>
-                      <button onClick={() => removeTopic(i)} className="text-gray-400 hover:text-red-500 text-lg leading-none">×</button>
-                    </li>
-                  ))}
-                </ul>
+                ))}
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Daily send time</label>
-                <input
-                  type="time"
-                  value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPageState("lookup")}
-                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm
-                           font-medium rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                ← Back
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={loading || topics.length === 0}
-                className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium
-                           rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
-              >
-                {loading ? "Saving…" : "Subscribe"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* MANAGE */}
-        {pageState === "manage" && subscription && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Your subscription</h2>
-                  <p className="text-sm text-gray-500 mt-0.5">{subscription.email}</p>
-                </div>
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
-                  Active
-                </span>
-              </div>
-
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Topics</p>
-                <div className="flex flex-wrap gap-2">
-                  {subscription.topics.map((t, i) => (
-                    <span key={i} className="bg-indigo-50 text-indigo-700 text-sm px-3 py-1 rounded-full">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Daily send time</p>
-                <p className="text-sm text-gray-700">
-                  {new Date(`2000-01-01T${subscription.schedule_time}`).toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleCancel}
-                disabled={loading}
-                className="flex-1 py-2.5 border border-red-200 text-red-600 text-sm
-                           font-medium rounded-lg hover:bg-red-50 transition-colors"
-              >
-                Cancel subscription
-              </button>
-              <button
-                onClick={() => setPageState("edit")}
-                className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium
-                           rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                Edit
-              </button>
-            </div>
+            )}
 
             <button
-              onClick={() => { setPageState("lookup"); setEmailInput(""); }}
-              className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => addTopic()}
+              disabled={!newTopic.trim()}
+              className="w-full py-3.5 bg-[#aaff00] text-black font-black text-sm uppercase tracking-widest rounded-xl disabled:opacity-40 active:scale-95 transition-transform flex items-center justify-center gap-2"
             >
-              ← Use a different email
+              ADD ⚡
             </button>
           </div>
         )}
 
-        {/* EDIT */}
-        {pageState === "edit" && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Edit subscription</h2>
-                <p className="text-sm text-gray-500 mt-0.5">{emailInput}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Topics</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newTopic}
-                    onChange={(e) => setNewTopic(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addTopic()}
-                    placeholder="Add a topic…"
-                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  />
-                  <button
-                    onClick={addTopic}
-                    disabled={!newTopic.trim()}
-                    className="px-3 py-2 bg-indigo-600 text-white text-sm rounded-lg
-                               hover:bg-indigo-700 disabled:opacity-40 transition-colors"
-                  >
-                    Add
-                  </button>
-                </div>
-                <ul className="mt-2 space-y-1.5">
-                  {topics.map((t, i) => (
-                    <li key={i} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
-                      <span className="text-sm text-gray-700">{t}</span>
-                      <button onClick={() => removeTopic(i)} className="text-gray-400 hover:text-red-500 text-lg leading-none">×</button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Daily send time</label>
-                <input
-                  type="time"
-                  value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                />
-              </div>
+        {/* YOUR CURRENT VIBES */}
+        {topics.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-black text-xs uppercase tracking-widest text-gray-700">
+                YOUR CURRENT VIBES
+              </span>
+              <span className="text-xs text-gray-400 font-semibold">
+                {topics.length} Topic{topics.length !== 1 ? "s" : ""} Active
+              </span>
             </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setPageState("manage")}
-                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm
-                           font-medium rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                ← Back
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={loading || topics.length === 0}
-                className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-medium
-                           rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors"
-              >
-                {loading ? "Saving…" : "Save changes"}
-              </button>
+            <div className="space-y-2">
+              {topics.map((t, i) => {
+                const emoji = pickBy(TOPIC_EMOJIS, t + "emoji");
+                const tag = pickBy(TOPIC_TAGS, t + "tag");
+                const bg = pickBy(TOPIC_ICON_BG, t + "bg");
+                return (
+                  <div
+                    key={i}
+                    className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm"
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-full ${bg} flex items-center justify-center text-xl flex-shrink-0`}
+                    >
+                      {emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 leading-snug">
+                        {t}
+                      </p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">
+                        {tag}
+                      </p>
+                    </div>
+                    {canEdit && (
+                      <button
+                        onClick={() => removeTopic(i)}
+                        className="text-gray-300 hover:text-red-400 text-2xl leading-none flex-shrink-0 transition-colors"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
+
+        {/* Manage actions (view mode only) */}
+        {pageState === "manage" && !isEditing && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex-1 py-3.5 bg-[#aaff00] text-black font-black text-xs uppercase tracking-widest rounded-2xl active:scale-95 transition-transform"
+            >
+              ✏️ EDIT VIBES
+            </button>
+            <button
+              onClick={handleCancel}
+              disabled={loading}
+              className="flex-1 py-3.5 bg-white text-red-400 font-black text-xs uppercase tracking-widest rounded-2xl border border-red-100 active:scale-95 transition-transform disabled:opacity-40"
+            >
+              💀 CANCEL
+            </button>
+          </div>
+        )}
+
+        {/* Daily Send Time */}
+        <div className="bg-[#e0e0e0] rounded-2xl p-5 space-y-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl mt-0.5">🕐</span>
+            <div>
+              <p className="font-black text-sm text-gray-800">Daily Send Time</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                When should we bother you with updates?
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <TimeUnit
+              val={String(timeState.hour).padStart(2, "0")}
+              onUp={() =>
+                setTimeState((s) => ({
+                  ...s,
+                  hour: s.hour === 12 ? 1 : s.hour + 1,
+                }))
+              }
+              onDown={() =>
+                setTimeState((s) => ({
+                  ...s,
+                  hour: s.hour === 1 ? 12 : s.hour - 1,
+                }))
+              }
+              disabled={!canEdit}
+            />
+            <span className="text-4xl font-black text-gray-600 pb-1 select-none">
+              :
+            </span>
+            <TimeUnit
+              val={String(timeState.minute).padStart(2, "0")}
+              onUp={() =>
+                setTimeState((s) => ({
+                  ...s,
+                  minute: s.minute >= 55 ? 0 : s.minute + 5,
+                }))
+              }
+              onDown={() =>
+                setTimeState((s) => ({
+                  ...s,
+                  minute: s.minute <= 0 ? 55 : s.minute - 5,
+                }))
+              }
+              disabled={!canEdit}
+            />
+            <div className="flex flex-col gap-1.5 ml-3">
+              <button
+                onClick={() =>
+                  canEdit && setTimeState((s) => ({ ...s, isPm: false }))
+                }
+                className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wide transition-colors ${
+                  !timeState.isPm
+                    ? "bg-[#aaff00] text-black"
+                    : "bg-white/60 text-gray-400"
+                }`}
+              >
+                AM
+              </button>
+              <button
+                onClick={() =>
+                  canEdit && setTimeState((s) => ({ ...s, isPm: true }))
+                }
+                className={`px-4 py-1.5 rounded-xl text-xs font-black uppercase tracking-wide transition-colors ${
+                  timeState.isPm
+                    ? "bg-[#aaff00] text-black"
+                    : "bg-white/60 text-gray-400"
+                }`}
+              >
+                PM
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mascot */}
+        <div className="flex flex-col items-center py-4 gap-2">
+          <span className="text-5xl">🦥</span>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            LAZYBITS CORE PROTOCOL V2.4
+          </p>
+        </div>
       </main>
+
+      {/* Sticky bottom panel (only in edit/create mode) */}
+      {canEdit && (
+        <div className="flex-shrink-0 bg-white border-t border-gray-200 px-4 pt-3 pb-2 space-y-2">
+          <button
+            onClick={handleBack}
+            className="w-full py-4 bg-gray-300 text-gray-700 font-black text-sm uppercase tracking-widest rounded-2xl active:scale-95 transition-transform"
+          >
+            {copy.back}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={loading || topics.length === 0}
+            className="w-full py-4 bg-[#7b2fff] text-white font-black text-sm uppercase tracking-widest rounded-2xl disabled:opacity-40 active:scale-95 transition-transform"
+          >
+            {loading ? "SAVING..." : copy.save}
+          </button>
+        </div>
+      )}
+
+      <BottomNav active="lazy-list" />
     </div>
   );
 }
