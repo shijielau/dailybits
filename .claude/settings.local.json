@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(npm install:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/shijielau/.nvm/**)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(command -v npm)",
+      "Read(//opt/homebrew/**)",
+      "Bash(export PATH=\"/Users/shijielau/.gemini/antigravity/scratch/tools/node-v20.11.1-darwin-arm64/bin:$PATH\")"
+    ]
+  }
+}
