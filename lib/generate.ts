@@ -1,39 +1,25 @@
-import { v4 as uuidv4 } from "uuid";
-import { fetchTopicNews, type TopicNews } from "./fetch-news";
+import { fetchTopicNews } from "./fetch-news";
 import { sendSummaryEmail } from "./email";
-import { loadConfig, saveSummary } from "./storage";
+import type { Subscription } from "./db";
 
 export interface GenerateResult {
-  content: string; // JSON-stringified TopicNews[]
+  email: string;
   emailSent: boolean;
-  emailTo: string;
+  error?: string;
 }
 
-export async function runGenerate(): Promise<GenerateResult> {
-  const config = loadConfig();
-
-  if (config.topics.length === 0) {
-    throw new Error("No topics configured. Add at least one topic first.");
+export async function runGenerateForSubscription(
+  sub: Subscription
+): Promise<GenerateResult> {
+  try {
+    const news = await fetchTopicNews(sub.topics);
+    await sendSummaryEmail(sub.email, news, sub.topics);
+    return { email: sub.email, emailSent: true };
+  } catch (err) {
+    return {
+      email: sub.email,
+      emailSent: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
   }
-
-  const news: TopicNews[] = await fetchTopicNews(config.topics);
-  const content = JSON.stringify(news);
-
-  let emailSent = false;
-  const emailTo = config.email;
-
-  if (emailTo) {
-    await sendSummaryEmail(emailTo, news, config.topics);
-    emailSent = true;
-  }
-
-  saveSummary({
-    id: uuidv4(),
-    generatedAt: new Date().toISOString(),
-    content,
-    emailSent,
-    emailTo,
-  });
-
-  return { content, emailSent, emailTo };
 }
