@@ -52,13 +52,13 @@ function toHtml(news: TopicNews[]): string {
 <head><meta charset="utf-8"/></head>
 <body style="font-family:system-ui,sans-serif;max-width:620px;margin:0 auto;padding:24px;background:#fff;">
   <div style="border-bottom:3px solid #4338ca;padding-bottom:16px;margin-bottom:8px;">
-    <h1 style="margin:0;color:#4338ca;font-size:26px;">📰 DailyBits</h1>
+    <h1 style="margin:0;color:#4338ca;font-size:26px;">📰 LazyBits</h1>
     <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${today}</p>
   </div>
   ${sections}
   <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;">
     <p style="margin:0;color:#9ca3af;font-size:11px;">
-      Powered by Google News RSS · DailyBits
+      Powered by Google News RSS · LazyBits
     </p>
   </div>
 </body>
@@ -77,9 +77,9 @@ export async function sendSummaryEmail(
   });
 
   const { error } = await getResend().emails.send({
-    from: `DailyBits <${FROM}>`,
+    from: `LazyBits <${FROM}>`,
     to,
-    subject: `DailyBits — ${today}`,
+    subject: `LazyBits — ${today}`,
     html: toHtml(news),
   });
 

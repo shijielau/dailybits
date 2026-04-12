@@ -16,12 +16,12 @@ export interface TopicNews {
 
 const parser = new Parser({
   timeout: 10_000,
-  headers: { "User-Agent": "DailyBits/1.0 RSS Reader" },
+  headers: { "User-Agent": "LazyBits/1.0 RSS Reader" },
 });
 
 /** Google News gives an RSS feed for any search query — no key needed. */
 function googleNewsUrl(topic: string) {
-  return `https://news.google.com/rss/search?q=${encodeURIComponent(topic)}&hl=en-US&gl=US&ceid=US:en`;
+  return `https://news.google.com/rss/search?q=${encodeURIComponent(topic)}&hl=en-US&gl=US&ceid=US:en&when=1d`;
 }
 
 /** Google News titles look like "Headline text - Source Name" */
@@ -37,7 +37,11 @@ export async function fetchTopicNews(topics: string[]): Promise<TopicNews[]> {
     topics.map(async (topic): Promise<TopicNews> => {
       try {
         const feed = await parser.parseURL(googleNewsUrl(topic));
-        const items: NewsItem[] = feed.items.slice(0, 6).map((item) => {
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        const items: NewsItem[] = feed.items
+          .filter((item) => !item.pubDate || new Date(item.pubDate).getTime() >= cutoff)
+          .slice(0, 6)
+          .map((item) => {
           const { headline, source } = splitTitle(item.title ?? "");
           return {
             headline,
