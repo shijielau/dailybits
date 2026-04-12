@@ -736,12 +736,21 @@ export default function Home() {
         <div className="bg-gray-100 rounded-2xl p-5 space-y-4">
           <div className="flex items-start gap-3">
             <span className="text-2xl mt-0.5">🕐</span>
-            <div>
+            <div className="flex-1">
               <p className="font-black text-sm text-gray-800">Daily Send Time</p>
               <p className="text-xs text-gray-500 mt-0.5">
                 When should we bother you with updates?
               </p>
             </div>
+            {pageState === "manage" && !isEditing && (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                aria-label="Edit"
+              >
+                ✏️
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <TimeUnit
@@ -823,17 +832,17 @@ export default function Home() {
       {canEdit && (
         <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 pt-3 pb-3 space-y-2">
           <button
-            onClick={handleBack}
-            className="w-full py-4 bg-gray-200 text-gray-700 font-black text-sm uppercase tracking-widest rounded-2xl active:scale-95 transition-transform"
-          >
-            {copy.back}
-          </button>
-          <button
             onClick={handleSave}
             disabled={loading || topics.length === 0}
             className="w-full py-4 bg-[#7b2fff] text-white font-black text-sm uppercase tracking-widest rounded-2xl disabled:opacity-40 active:scale-95 transition-transform"
           >
             {loading ? "SAVING..." : copy.save}
+          </button>
+          <button
+            onClick={handleBack}
+            className="w-full py-4 bg-gray-200 text-gray-700 font-black text-sm uppercase tracking-widest rounded-2xl active:scale-95 transition-transform"
+          >
+            {copy.back}
           </button>
         </div>
       )}
