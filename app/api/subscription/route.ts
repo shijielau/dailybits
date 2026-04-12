@@ -21,20 +21,22 @@ export async function GET(req: NextRequest) {
 
 // POST /api/subscription — create or update
 export async function POST(req: NextRequest) {
-  const { email, topics, scheduleTime } = await req.json() as {
+  const { email, topics, scheduleTime, timezone } = await req.json() as {
     email: string;
     topics: string[];
     scheduleTime: string;
+    timezone: string;
   };
 
   if (!email || !topics || !scheduleTime) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
+  const tz = timezone || "UTC";
   const existing = await getSubscription(email);
   const sub = existing
-    ? await updateSubscription(email, topics, scheduleTime)
-    : await createSubscription(email, topics, scheduleTime);
+    ? await updateSubscription(email, topics, scheduleTime, tz)
+    : await createSubscription(email, topics, scheduleTime, tz);
 
   return NextResponse.json({ subscription: sub });
 }

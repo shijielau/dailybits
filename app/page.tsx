@@ -231,6 +231,44 @@ function to24h(hour: number, minute: number, isPm: boolean): string {
   return `${String(h).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
+// ─── TIMEZONES ────────────────────────────────────────────────────────────────
+
+const COMMON_TIMEZONES = [
+  "Pacific/Honolulu",
+  "America/Anchorage",
+  "America/Los_Angeles",
+  "America/Denver",
+  "America/Chicago",
+  "America/New_York",
+  "America/Sao_Paulo",
+  "Atlantic/Azores",
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Berlin",
+  "Europe/Helsinki",
+  "Europe/Moscow",
+  "Asia/Dubai",
+  "Asia/Karachi",
+  "Asia/Kolkata",
+  "Asia/Dhaka",
+  "Asia/Bangkok",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Asia/Seoul",
+  "Asia/Shanghai",
+  "Australia/Perth",
+  "Australia/Sydney",
+  "Pacific/Auckland",
+];
+
+function detectTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return "UTC";
+  }
+}
+
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 interface Subscription {
@@ -238,6 +276,7 @@ interface Subscription {
   email: string;
   topics: string[];
   schedule_time: string;
+  timezone: string;
   active: boolean;
 }
 
@@ -292,6 +331,8 @@ export default function Home() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [timeState, setTimeState] = useState(() => parseTo12h("08:00"));
+  const [timezone, setTimezone] = useState(detectTimezone);
+  const [editingTz, setEditingTz] = useState(false);
 
   const scheduleTime = to24h(timeState.hour, timeState.minute, timeState.isPm);
 
@@ -337,6 +378,7 @@ export default function Home() {
         setSubscription(data.subscription);
         setTopics(data.subscription.topics);
         setTimeState(parseTo12h(data.subscription.schedule_time));
+        setTimezone(data.subscription.timezone || detectTimezone());
         setIsEditing(false);
         setPageState("manage");
       } else {
@@ -362,7 +404,7 @@ export default function Home() {
       const res = await fetch("/api/subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailInput, topics, scheduleTime }),
+        body: JSON.stringify({ email: emailInput, topics, scheduleTime, timezone }),
       });
       const data = (await res.json()) as { subscription: Subscription };
       setSubscription(data.subscription);
@@ -410,8 +452,10 @@ export default function Home() {
       setPageState("lookup");
     } else {
       setIsEditing(false);
+      setEditingTz(false);
       setTopics(subscription?.topics ?? []);
       setTimeState(parseTo12h(subscription?.schedule_time ?? "08:00"));
+      setTimezone(subscription?.timezone || detectTimezone());
     }
   }
 
@@ -670,6 +714,31 @@ export default function Home() {
                 PM
               </button>
             </div>
+          </div>
+
+          {/* Timezone — subtle, clickable in edit mode */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-gray-400 text-xs">🌐</span>
+            {canEdit && editingTz ? (
+              <select
+                value={timezone}
+                onChange={(e) => { setTimezone(e.target.value); setEditingTz(false); }}
+                onBlur={() => setEditingTz(false)}
+                autoFocus
+                className="text-xs text-gray-500 bg-transparent border-b border-gray-300 focus:outline-none focus:border-[#aaff00] cursor-pointer"
+              >
+                {COMMON_TIMEZONES.map((tz) => (
+                  <option key={tz} value={tz}>{tz}</option>
+                ))}
+              </select>
+            ) : (
+              <button
+                onClick={() => canEdit && setEditingTz(true)}
+                className={`text-xs text-gray-400 ${canEdit ? "hover:text-gray-600 underline underline-offset-2 decoration-dotted" : ""} transition-colors`}
+              >
+                {timezone}
+              </button>
+            )}
           </div>
         </div>
 
