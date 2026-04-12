@@ -4,7 +4,15 @@ import {
   createSubscription,
   updateSubscription,
   cancelSubscription,
+  type Subscription,
 } from "@/lib/db";
+
+/** Strip sensitive fields before sending to frontend */
+function sanitize(sub: Subscription) {
+  const { email_encrypted, email_hash, email, ...safe } = sub;
+  void email_encrypted; void email_hash; void email; // explicitly excluded
+  return safe;
+}
 
 // GET /api/subscription?email=...
 export async function GET(req: NextRequest) {
@@ -16,7 +24,7 @@ export async function GET(req: NextRequest) {
   if (!sub) {
     return NextResponse.json({ exists: false });
   }
-  return NextResponse.json({ exists: true, subscription: sub });
+  return NextResponse.json({ exists: true, subscription: sanitize(sub) });
 }
 
 // POST /api/subscription — create or update
@@ -38,7 +46,9 @@ export async function POST(req: NextRequest) {
     ? await updateSubscription(email, topics, scheduleTime, tz)
     : await createSubscription(email, topics, scheduleTime, tz);
 
-  return NextResponse.json({ subscription: sub });
+  if (!sub) return NextResponse.json({ error: "Failed to save" }, { status: 500 });
+
+  return NextResponse.json({ subscription: sanitize(sub) });
 }
 
 // DELETE /api/subscription?email=...

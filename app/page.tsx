@@ -273,7 +273,7 @@ function detectTimezone(): string {
 
 interface Subscription {
   id: string;
-  email: string;
+  email_display: string | null;
   topics: string[];
   schedule_time: string;
   timezone: string;
@@ -594,7 +594,9 @@ export default function Home() {
           </h2>
           <p className="text-sm text-gray-400">
             Managing bits for:{" "}
-            <span className="text-pink-500 font-semibold">{emailInput}</span>
+            <span className="text-pink-500 font-semibold">
+              {subscription?.email_display ?? emailInput}
+            </span>
           </p>
         </div>
 
