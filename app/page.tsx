@@ -350,6 +350,29 @@ export default function Home() {
     []
   );
 
+  // On mount: auto-login returning users from cached email
+  useEffect(() => {
+    const cached = localStorage.getItem("lazybits_email");
+    if (cached) {
+      setEmailInput(cached);
+      setLoading(true);
+      fetch(`/api/subscription?email=${encodeURIComponent(cached)}`)
+        .then((r) => r.json())
+        .then((data: { exists: boolean; subscription?: Subscription }) => {
+          if (data.exists && data.subscription) {
+            setSubscription(data.subscription);
+            setTopics(data.subscription.topics);
+            setTimeState(parseTo12h(data.subscription.schedule_time));
+            setTimezone(data.subscription.timezone || detectTimezone());
+            setIsEditing(false);
+            setPageState("manage");
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, []);
+
   // Fetch trending topics on mount
   useEffect(() => {
     fetch("/api/trending")
@@ -375,6 +398,7 @@ export default function Home() {
         subscription?: Subscription;
       };
       if (data.exists && data.subscription) {
+        localStorage.setItem("lazybits_email", emailInput.trim());
         setSubscription(data.subscription);
         setTopics(data.subscription.topics);
         setTimeState(parseTo12h(data.subscription.schedule_time));
@@ -407,6 +431,7 @@ export default function Home() {
         body: JSON.stringify({ email: emailInput, topics, scheduleTime, timezone }),
       });
       const data = (await res.json()) as { subscription: Subscription };
+      localStorage.setItem("lazybits_email", emailInput.trim());
       setSubscription(data.subscription);
       setIsEditing(false);
       setPageState("manage");
@@ -425,6 +450,7 @@ export default function Home() {
       await fetch(`/api/subscription?email=${encodeURIComponent(emailInput)}`, {
         method: "DELETE",
       });
+      localStorage.removeItem("lazybits_email");
       setSubscription(null);
       setPageState("lookup");
       setEmailInput("");
@@ -470,6 +496,23 @@ export default function Home() {
 
   // ── LOOKUP SCREEN ─────────────────────────────────────────────────────────
 
+  // Show blank screen while auto-login is running so there's no flash
+  if (pageState === "lookup" && loading) {
+    return (
+      <div className="h-screen max-w-sm mx-auto flex flex-col overflow-hidden bg-white">
+        <header className="bg-[#0f0f1a] px-5 py-4 flex items-center flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🦥</span>
+            <span className="text-white font-black text-base tracking-widest uppercase">LazyBits</span>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center bg-white">
+          <span className="text-gray-300 text-sm font-bold uppercase tracking-widest animate-pulse">Loading...</span>
+        </main>
+      </div>
+    );
+  }
+
   if (pageState === "lookup") {
     return (
       <div className="h-screen max-w-sm mx-auto flex flex-col overflow-hidden">
@@ -487,8 +530,11 @@ export default function Home() {
             <h2 className="text-4xl font-black italic uppercase text-[#aaff00] leading-tight">
               {copy.lookup}
             </h2>
-            <p className="text-gray-400 text-sm mt-2">
-              Enter your email to manage or create your subscription.
+            <p className="text-gray-700 text-sm font-medium mt-2">
+              For those too lazy to even Google things themselves.
+            </p>
+            <p className="text-gray-400 text-xs mt-1">
+              Get a daily email dose of what you care about, but apparently not enough to Google it yourselves.
             </p>
           </div>
 
@@ -663,7 +709,7 @@ export default function Home() {
               </button>
             </div>
             <button
-              onClick={() => { setPageState("lookup"); setEmailInput(""); }}
+              onClick={() => { localStorage.removeItem("lazybits_email"); setPageState("lookup"); setEmailInput(""); }}
               className="w-full text-xs text-gray-400 hover:text-gray-600 font-semibold py-2 transition-colors"
             >
               ← Not you? Use a different email
