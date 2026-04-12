@@ -282,6 +282,63 @@ interface Subscription {
 
 type PageState = "lookup" | "create" | "manage";
 
+// ─── SLOTH ART ────────────────────────────────────────────────────────────────
+
+function SlothArt() {
+  return (
+    <svg viewBox="0 0 300 210" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+      {/* Left claws */}
+      <path d="M75 18 L56 2" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
+      <path d="M75 18 L71 0" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
+      <path d="M75 18 L90 5" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
+      {/* Right claws */}
+      <path d="M225 18 L210 5" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
+      <path d="M225 18 L229 0" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
+      <path d="M225 18 L244 2" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
+      {/* Left arm */}
+      <path d="M75 18 C62 68 88 98 112 114" stroke="#0f0f1a" strokeWidth="8" strokeLinecap="round"/>
+      {/* Right arm */}
+      <path d="M225 18 C238 68 212 98 188 114" stroke="#0f0f1a" strokeWidth="8" strokeLinecap="round"/>
+      {/* Body */}
+      <ellipse cx="150" cy="182" rx="50" ry="28" fill="#f5f5f5" stroke="#0f0f1a" strokeWidth="5"/>
+      {/* Body fur lines */}
+      <path d="M118 178 Q134 172 150 178" stroke="#d8d8d8" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M150 178 Q166 172 182 178" stroke="#d8d8d8" strokeWidth="2" strokeLinecap="round"/>
+      {/* Left ear outer */}
+      <circle cx="113" cy="86" r="18" fill="white" stroke="#0f0f1a" strokeWidth="5"/>
+      <circle cx="113" cy="86" r="9" fill="#ffe8e8" stroke="#0f0f1a" strokeWidth="3"/>
+      {/* Right ear outer */}
+      <circle cx="187" cy="86" r="18" fill="white" stroke="#0f0f1a" strokeWidth="5"/>
+      <circle cx="187" cy="86" r="9" fill="#ffe8e8" stroke="#0f0f1a" strokeWidth="3"/>
+      {/* Head */}
+      <circle cx="150" cy="120" r="44" fill="white" stroke="#0f0f1a" strokeWidth="5"/>
+      {/* Face fur patch */}
+      <ellipse cx="150" cy="130" rx="25" ry="21" fill="#f5f0ea" stroke="#0f0f1a" strokeWidth="3"/>
+      {/* Left eye ring */}
+      <ellipse cx="137" cy="117" rx="11" ry="10" fill="#ede5da" stroke="#0f0f1a" strokeWidth="2.5"/>
+      {/* Right eye ring */}
+      <ellipse cx="163" cy="117" rx="11" ry="10" fill="#ede5da" stroke="#0f0f1a" strokeWidth="2.5"/>
+      {/* Pupils */}
+      <circle cx="137" cy="117" r="5" fill="#0f0f1a"/>
+      <circle cx="163" cy="117" r="5" fill="#0f0f1a"/>
+      {/* Eye shine */}
+      <circle cx="139" cy="115" r="2" fill="white"/>
+      <circle cx="165" cy="115" r="2" fill="white"/>
+      {/* Nose */}
+      <ellipse cx="150" cy="128" rx="4.5" ry="3.5" fill="#0f0f1a"/>
+      {/* Lazy smile */}
+      <path d="M142 135 Q150 142 158 135" stroke="#0f0f1a" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Lime green claw accent tips */}
+      <circle cx="56" cy="2" r="3" fill="#aaff00"/>
+      <circle cx="71" cy="0" r="3" fill="#aaff00"/>
+      <circle cx="90" cy="5" r="3" fill="#aaff00"/>
+      <circle cx="210" cy="5" r="3" fill="#aaff00"/>
+      <circle cx="229" cy="0" r="3" fill="#aaff00"/>
+      <circle cx="244" cy="2" r="3" fill="#aaff00"/>
+    </svg>
+  );
+}
+
 // ─── TIME UNIT ────────────────────────────────────────────────────────────────
 
 function TimeUnit({
@@ -333,6 +390,7 @@ export default function Home() {
   const [timeState, setTimeState] = useState(() => parseTo12h("08:00"));
   const [timezone, setTimezone] = useState(detectTimezone);
   const [editingTz, setEditingTz] = useState(false);
+  const [showSubtitle, setShowSubtitle] = useState(false);
 
   const scheduleTime = to24h(timeState.hour, timeState.minute, timeState.isPm);
 
@@ -525,19 +583,29 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col justify-center bg-white px-5 pb-10 gap-6">
-          <div>
+        <main className="flex-1 flex flex-col bg-white px-5 pt-10 overflow-hidden">
+          {/* Title + tagline */}
+          <div className="mb-6">
             <h2 className="text-4xl font-black italic uppercase text-[#aaff00] leading-tight">
               {copy.lookup}
             </h2>
             <p className="text-gray-700 text-sm font-medium mt-2">
-              For those too lazy to even Google things themselves.
+              For those too lazy to even Google things themselves.{" "}
+              <button
+                onClick={() => setShowSubtitle((v) => !v)}
+                className="text-gray-300 hover:text-gray-400 transition-colors text-xs font-bold"
+              >
+                {showSubtitle ? "▲" : "▼"}
+              </button>
             </p>
-            <p className="text-gray-400 text-xs mt-1">
-              Get a daily email dose of what you care about, but apparently not enough to Google it yourselves.
-            </p>
+            {showSubtitle && (
+              <p className="text-gray-400 text-xs mt-1 leading-relaxed">
+                Get a daily email dose of what you care about, but apparently not enough to Google it yourselves.
+              </p>
+            )}
           </div>
 
+          {/* Form */}
           <div className="space-y-3">
             <input
               type="email"
@@ -554,6 +622,11 @@ export default function Home() {
             >
               {loading ? "CHECKING..." : copy.go}
             </button>
+          </div>
+
+          {/* Sloth holding the form */}
+          <div className="-mt-1 px-2">
+            <SlothArt />
           </div>
         </main>
       </div>
