@@ -286,55 +286,84 @@ type PageState = "lookup" | "create" | "manage";
 
 function SlothArt() {
   return (
-    <svg viewBox="0 0 300 210" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-      {/* Left claws */}
-      <path d="M75 18 L56 2" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
-      <path d="M75 18 L71 0" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
-      <path d="M75 18 L90 5" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
-      {/* Right claws */}
-      <path d="M225 18 L210 5" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
-      <path d="M225 18 L229 0" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
-      <path d="M225 18 L244 2" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
-      {/* Left arm */}
-      <path d="M75 18 C62 68 88 98 112 114" stroke="#0f0f1a" strokeWidth="8" strokeLinecap="round"/>
-      {/* Right arm */}
-      <path d="M225 18 C238 68 212 98 188 114" stroke="#0f0f1a" strokeWidth="8" strokeLinecap="round"/>
-      {/* Body */}
-      <ellipse cx="150" cy="182" rx="50" ry="28" fill="#f5f5f5" stroke="#0f0f1a" strokeWidth="5"/>
-      {/* Body fur lines */}
-      <path d="M118 178 Q134 172 150 178" stroke="#d8d8d8" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M150 178 Q166 172 182 178" stroke="#d8d8d8" strokeWidth="2" strokeLinecap="round"/>
-      {/* Left ear outer */}
-      <circle cx="113" cy="86" r="18" fill="white" stroke="#0f0f1a" strokeWidth="5"/>
-      <circle cx="113" cy="86" r="9" fill="#ffe8e8" stroke="#0f0f1a" strokeWidth="3"/>
-      {/* Right ear outer */}
-      <circle cx="187" cy="86" r="18" fill="white" stroke="#0f0f1a" strokeWidth="5"/>
-      <circle cx="187" cy="86" r="9" fill="#ffe8e8" stroke="#0f0f1a" strokeWidth="3"/>
-      {/* Head */}
-      <circle cx="150" cy="120" r="44" fill="white" stroke="#0f0f1a" strokeWidth="5"/>
-      {/* Face fur patch */}
-      <ellipse cx="150" cy="130" rx="25" ry="21" fill="#f5f0ea" stroke="#0f0f1a" strokeWidth="3"/>
-      {/* Left eye ring */}
-      <ellipse cx="137" cy="117" rx="11" ry="10" fill="#ede5da" stroke="#0f0f1a" strokeWidth="2.5"/>
-      {/* Right eye ring */}
-      <ellipse cx="163" cy="117" rx="11" ry="10" fill="#ede5da" stroke="#0f0f1a" strokeWidth="2.5"/>
-      {/* Pupils */}
-      <circle cx="137" cy="117" r="5" fill="#0f0f1a"/>
-      <circle cx="163" cy="117" r="5" fill="#0f0f1a"/>
-      {/* Eye shine */}
-      <circle cx="139" cy="115" r="2" fill="white"/>
-      <circle cx="165" cy="115" r="2" fill="white"/>
-      {/* Nose */}
-      <ellipse cx="150" cy="128" rx="4.5" ry="3.5" fill="#0f0f1a"/>
-      {/* Lazy smile */}
-      <path d="M142 135 Q150 142 158 135" stroke="#0f0f1a" strokeWidth="2.5" strokeLinecap="round"/>
-      {/* Lime green claw accent tips */}
-      <circle cx="56" cy="2" r="3" fill="#aaff00"/>
-      <circle cx="71" cy="0" r="3" fill="#aaff00"/>
-      <circle cx="90" cy="5" r="3" fill="#aaff00"/>
-      <circle cx="210" cy="5" r="3" fill="#aaff00"/>
-      <circle cx="229" cy="0" r="3" fill="#aaff00"/>
-      <circle cx="244" cy="2" r="3" fill="#aaff00"/>
+    <svg viewBox="0 0 300 230" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+      <defs>
+        <clipPath id="leftLens">
+          <rect x="94" y="135" width="44" height="24" rx="5"/>
+        </clipPath>
+        <clipPath id="rightLens">
+          <rect x="162" y="135" width="44" height="24" rx="5"/>
+        </clipPath>
+      </defs>
+
+      {/* === TROPICAL LEAVES === */}
+      <path d="M10 200 C30 160 60 155 55 185" stroke="#aaff00" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M0 220 C25 185 58 178 48 210" stroke="#aaff00" strokeWidth="4" strokeLinecap="round"/>
+      <path d="M22 215 C45 190 68 195 58 220" stroke="#7b2fff" strokeWidth="4" strokeLinecap="round"/>
+      <path d="M290 200 C270 160 240 155 245 185" stroke="#aaff00" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M300 220 C275 185 242 178 252 210" stroke="#aaff00" strokeWidth="4" strokeLinecap="round"/>
+      <path d="M278 215 C255 190 232 195 242 220" stroke="#7b2fff" strokeWidth="4" strokeLinecap="round"/>
+
+      {/* === ARMS === */}
+      <path d="M78 15 C55 65 80 105 108 128" stroke="#0f0f1a" strokeWidth="10" strokeLinecap="round"/>
+      <path d="M222 15 C245 65 220 105 192 128" stroke="#0f0f1a" strokeWidth="10" strokeLinecap="round"/>
+
+      {/* === CLAWS (lime tips) === */}
+      <path d="M78 15 L60 2" stroke="#0f0f1a" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M78 15 L75 0" stroke="#0f0f1a" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M78 15 L94 4" stroke="#0f0f1a" strokeWidth="6" strokeLinecap="round"/>
+      <circle cx="60" cy="2" r="4" fill="#aaff00"/>
+      <circle cx="75" cy="0" r="4" fill="#aaff00"/>
+      <circle cx="94" cy="4" r="4" fill="#aaff00"/>
+
+      <path d="M222 15 L206 4" stroke="#0f0f1a" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M222 15 L225 0" stroke="#0f0f1a" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M222 15 L240 2" stroke="#0f0f1a" strokeWidth="6" strokeLinecap="round"/>
+      <circle cx="206" cy="4" r="4" fill="#aaff00"/>
+      <circle cx="225" cy="0" r="4" fill="#aaff00"/>
+      <circle cx="240" cy="2" r="4" fill="#aaff00"/>
+
+      {/* === SPIKY FUR === */}
+      <path d="M125 100 L118 76 L132 96" fill="#0f0f1a"/>
+      <path d="M140 95 L136 68 L150 92" fill="#0f0f1a"/>
+      <path d="M155 94 L155 66 L166 91" fill="#0f0f1a"/>
+      <path d="M168 98 L172 74 L180 96" fill="#0f0f1a"/>
+
+      {/* === EARS === */}
+      <circle cx="100" cy="138" r="18" fill="white" stroke="#0f0f1a" strokeWidth="6"/>
+      <circle cx="200" cy="138" r="18" fill="white" stroke="#0f0f1a" strokeWidth="6"/>
+
+      {/* === HEAD === */}
+      <circle cx="150" cy="155" r="58" fill="white" stroke="#0f0f1a" strokeWidth="6"/>
+
+      {/* === SUNGLASSES === */}
+      {/* Left lens frame */}
+      <rect x="92" y="133" width="48" height="28" rx="7" fill="#0f0f1a"/>
+      {/* Left lens stripes */}
+      <g clipPath="url(#leftLens)">
+        <rect x="94" y="135" width="11" height="24" fill="#aaff00"/>
+        <rect x="105" y="135" width="11" height="24" fill="#7b2fff"/>
+        <rect x="116" y="135" width="11" height="24" fill="#aaff00"/>
+        <rect x="127" y="135" width="11" height="24" fill="#7b2fff"/>
+      </g>
+      {/* Bridge */}
+      <rect x="140" y="141" width="20" height="8" rx="3" fill="#0f0f1a"/>
+      {/* Right lens frame */}
+      <rect x="160" y="133" width="48" height="28" rx="7" fill="#0f0f1a"/>
+      {/* Right lens stripes */}
+      <g clipPath="url(#rightLens)">
+        <rect x="162" y="135" width="11" height="24" fill="#aaff00"/>
+        <rect x="173" y="135" width="11" height="24" fill="#7b2fff"/>
+        <rect x="184" y="135" width="11" height="24" fill="#aaff00"/>
+        <rect x="195" y="135" width="11" height="24" fill="#7b2fff"/>
+      </g>
+      {/* Temple arms */}
+      <path d="M92 146 L78 143" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
+      <path d="M208 146 L222 143" stroke="#0f0f1a" strokeWidth="5" strokeLinecap="round"/>
+
+      {/* === NOSE + SMIRK === */}
+      <ellipse cx="150" cy="172" rx="5" ry="4" fill="#0f0f1a"/>
+      <path d="M140 182 Q150 190 162 183" stroke="#0f0f1a" strokeWidth="3" strokeLinecap="round"/>
     </svg>
   );
 }
