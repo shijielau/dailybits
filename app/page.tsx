@@ -342,7 +342,6 @@ export default function Home() {
   const [timeState, setTimeState] = useState(() => parseTo12h("08:00"));
   const [timezone, setTimezone] = useState(detectTimezone);
   const [editingTz, setEditingTz] = useState(false);
-  const [showSubtitle, setShowSubtitle] = useState(false);
 
   const scheduleTime = to24h(timeState.hour, timeState.minute, timeState.isPm);
 
@@ -542,19 +541,8 @@ export default function Home() {
               {copy.lookup}
             </h2>
             <p className="text-gray-700 text-sm font-medium mt-2">
-              For those too lazy to even Google things themselves.{" "}
-              <button
-                onClick={() => setShowSubtitle((v) => !v)}
-                className="text-gray-300 hover:text-gray-400 transition-colors text-xs font-bold"
-              >
-                {showSubtitle ? "▲" : "▼"}
-              </button>
+              Get a daily email dose of what you care about, but apparently not enough to Google it yourself.
             </p>
-            {showSubtitle && (
-              <p className="text-gray-400 text-xs mt-1 leading-relaxed">
-                Get a daily email dose of what you care about, but apparently not enough to Google it yourselves.
-              </p>
-            )}
           </div>
 
           {/* Form */}
