@@ -466,8 +466,8 @@ export default function Home() {
         const data = (await res.json()) as { error?: string };
         showBanner(data.error ?? "Something went wrong.", false);
       }
-    } catch {
-      showBanner("Something went wrong. Please try again.", false);
+    } catch (err) {
+      showBanner(err instanceof Error ? err.message : "Network error. Please try again.", false);
     } finally {
       setLoading(false);
     }
