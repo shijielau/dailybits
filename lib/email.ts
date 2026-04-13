@@ -1,13 +1,19 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import type { TopicNews } from "./fetch-news";
 
-const FROM = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+const FROM = process.env.GMAIL_FROM ?? "shijielau@gmail.com";
 
-function getResend() {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error("RESEND_API_KEY is not set in .env.local");
+function getTransporter() {
+  if (!process.env.GMAIL_APP_PASSWORD) {
+    throw new Error("GMAIL_APP_PASSWORD is not set in environment variables");
   }
-  return new Resend(process.env.RESEND_API_KEY);
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: FROM,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
 }
 
 function toHtml(news: TopicNews[]): string {
@@ -78,12 +84,10 @@ export async function sendSummaryEmail(
     year: "numeric",
   });
 
-  const { error } = await getResend().emails.send({
+  await getTransporter().sendMail({
     from: `LazyBits <${FROM}>`,
     to,
     subject: `LazyBits — ${today}`,
     html: toHtml(news),
   });
-
-  if (error) throw new Error(`Resend error: ${error.message}`);
 }
