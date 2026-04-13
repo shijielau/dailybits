@@ -1,28 +1,7 @@
-import nodemailer from "nodemailer";
-import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import type { TopicNews } from "./fetch-news";
 
-const FROM = process.env.GMAIL_FROM ?? "shijielau@gmail.com";
-
-function getTransporter() {
-  if (!process.env.GMAIL_APP_PASSWORD) {
-    throw new Error("GMAIL_APP_PASSWORD is not set in environment variables");
-  }
-  const opts = {
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: FROM,
-      pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, ""),
-    },
-    family: 4,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  } as SMTPTransport.Options;
-  return nodemailer.createTransport(opts);
-}
+const FROM_EMAIL = process.env.BREVO_FROM_EMAIL ?? "shijielau@gmail.com";
+const FROM_NAME = "LazyBits";
 
 function toHtml(news: TopicNews[]): string {
   const today = new Date().toLocaleDateString("en-US", {
@@ -92,10 +71,26 @@ export async function sendSummaryEmail(
     year: "numeric",
   });
 
-  await getTransporter().sendMail({
-    from: `LazyBits <${FROM}>`,
-    to,
-    subject: `LazyBits — ${today}`,
-    html: toHtml(news),
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error("BREVO_API_KEY is not set in environment variables");
+  }
+
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": process.env.BREVO_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: FROM_NAME, email: FROM_EMAIL },
+      to: [{ email: to }],
+      subject: `LazyBits — ${today}`,
+      htmlContent: toHtml(news),
+    }),
   });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Brevo error: ${err}`);
+  }
 }
