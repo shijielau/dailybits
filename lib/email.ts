@@ -8,11 +8,16 @@ function getTransporter() {
     throw new Error("GMAIL_APP_PASSWORD is not set in environment variables");
   }
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: FROM,
-      pass: process.env.GMAIL_APP_PASSWORD,
+      pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, ""),
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 }
 
