@@ -15,6 +15,7 @@ function getTransporter() {
       user: FROM,
       pass: process.env.GMAIL_APP_PASSWORD.replace(/\s/g, ""),
     },
+    family: 4,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
