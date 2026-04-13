@@ -23,6 +23,8 @@ function toHtml(news: TopicNews[]): string {
       const items =
         t.error
           ? `<p style="color:#9ca3af;font-size:13px;">Could not fetch headlines: ${t.error}</p>`
+          : t.items.length === 0
+          ? `<p style="color:#9ca3af;font-size:13px;">No recent news found for this topic.</p>`
           : t.items
               .map(
                 (item) => `

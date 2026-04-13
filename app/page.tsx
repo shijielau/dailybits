@@ -452,6 +452,27 @@ export default function Home() {
     }
   }
 
+  async function handleSendNow() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/send-now", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailInput }),
+      });
+      if (res.ok) {
+        showBanner("Email sent! Check your inbox 📬", true);
+      } else {
+        const data = (await res.json()) as { error?: string };
+        showBanner(data.error ?? "Something went wrong.", false);
+      }
+    } catch {
+      showBanner("Something went wrong. Please try again.", false);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleCancel() {
     if (!confirm("Cancel your subscription? You can always come back!")) return;
     setLoading(true);
@@ -795,27 +816,38 @@ export default function Home() {
             )}
           </div>
 
-          {/* Timezone — subtle, clickable in edit mode */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-gray-400 text-xs">🌐</span>
-            {canEdit && editingTz ? (
-              <select
-                value={timezone}
-                onChange={(e) => { setTimezone(e.target.value); setEditingTz(false); }}
-                onBlur={() => setEditingTz(false)}
-                autoFocus
-                className="text-xs text-gray-500 bg-transparent border-b border-gray-300 focus:outline-none focus:border-[#aaff00] cursor-pointer"
-              >
-                {COMMON_TIMEZONES.map((tz) => (
-                  <option key={tz} value={tz}>{tz}</option>
-                ))}
-              </select>
-            ) : (
+          {/* Timezone + Send Now row */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-gray-400 text-xs">🌐</span>
+              {canEdit && editingTz ? (
+                <select
+                  value={timezone}
+                  onChange={(e) => { setTimezone(e.target.value); setEditingTz(false); }}
+                  onBlur={() => setEditingTz(false)}
+                  autoFocus
+                  className="text-xs text-gray-500 bg-transparent border-b border-gray-300 focus:outline-none focus:border-[#aaff00] cursor-pointer"
+                >
+                  {COMMON_TIMEZONES.map((tz) => (
+                    <option key={tz} value={tz}>{tz}</option>
+                  ))}
+                </select>
+              ) : (
+                <button
+                  onClick={() => canEdit && setEditingTz(true)}
+                  className={`text-xs text-gray-400 ${canEdit ? "hover:text-gray-600 underline underline-offset-2 decoration-dotted" : ""} transition-colors`}
+                >
+                  {timezone}
+                </button>
+              )}
+            </div>
+            {!canEdit && (
               <button
-                onClick={() => canEdit && setEditingTz(true)}
-                className={`text-xs text-gray-400 ${canEdit ? "hover:text-gray-600 underline underline-offset-2 decoration-dotted" : ""} transition-colors`}
+                onClick={handleSendNow}
+                disabled={loading}
+                className="px-3 py-1.5 bg-[#0f0f1a] text-[#aaff00] font-black text-[10px] uppercase tracking-widest rounded-xl active:scale-95 transition-transform disabled:opacity-40"
               >
-                {timezone}
+                {loading ? "..." : "📬 SEND NOW"}
               </button>
             )}
           </div>
