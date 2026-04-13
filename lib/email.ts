@@ -1,6 +1,6 @@
 import type { TopicNews } from "./fetch-news";
 
-const FROM_EMAIL = process.env.BREVO_FROM_EMAIL ?? "shijielau@gmail.com";
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL ?? "shijielau@gmail.com";
 const FROM_NAME = "LazyBits";
 
 function toHtml(news: TopicNews[]): string {
@@ -71,26 +71,26 @@ export async function sendSummaryEmail(
     year: "numeric",
   });
 
-  if (!process.env.BREVO_API_KEY) {
-    throw new Error("BREVO_API_KEY is not set in environment variables");
+  if (!process.env.SENDGRID_API_KEY) {
+    throw new Error("SENDGRID_API_KEY is not set in environment variables");
   }
 
-  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+  const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
     method: "POST",
     headers: {
-      "api-key": process.env.BREVO_API_KEY,
+      Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      sender: { name: FROM_NAME, email: FROM_EMAIL },
-      to: [{ email: to }],
+      from: { name: FROM_NAME, email: FROM_EMAIL },
+      personalizations: [{ to: [{ email: to }] }],
       subject: `LazyBits — ${today}`,
-      htmlContent: toHtml(news),
+      content: [{ type: "text/html", value: toHtml(news) }],
     }),
   });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Brevo error: ${err}`);
+    throw new Error(`SendGrid error: ${err}`);
   }
 }
