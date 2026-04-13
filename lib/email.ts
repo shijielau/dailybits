@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import type { TopicNews } from "./fetch-news";
 
 const FROM = process.env.GMAIL_FROM ?? "shijielau@gmail.com";
@@ -7,7 +8,7 @@ function getTransporter() {
   if (!process.env.GMAIL_APP_PASSWORD) {
     throw new Error("GMAIL_APP_PASSWORD is not set in environment variables");
   }
-  return nodemailer.createTransport({
+  const opts = {
     host: "smtp.gmail.com",
     port: 465,
     secure: true,
@@ -19,7 +20,8 @@ function getTransporter() {
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
-  });
+  } as SMTPTransport.Options;
+  return nodemailer.createTransport(opts);
 }
 
 function toHtml(news: TopicNews[]): string {
