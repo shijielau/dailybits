@@ -3,7 +3,9 @@ import type { TopicNews } from "./fetch-news";
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL ?? "shijielau@gmail.com";
 const FROM_NAME = "LazyBits";
 
-function toHtml(news: TopicNews[]): string {
+const SITE_URL = process.env.SITE_URL ?? "https://lazybits-production.up.railway.app";
+
+function toHtml(news: TopicNews[], recipientEmail: string): string {
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -47,14 +49,19 @@ function toHtml(news: TopicNews[]): string {
 <head><meta charset="utf-8"/></head>
 <body style="font-family:system-ui,sans-serif;max-width:620px;margin:0 auto;padding:24px;background:#fff;">
   <div style="border-bottom:3px solid #4338ca;padding-bottom:16px;margin-bottom:8px;">
-    <h1 style="margin:0;color:#4338ca;font-size:26px;">📰 LazyBits</h1>
+    <a href="${SITE_URL}" style="text-decoration:none;">
+      <h1 style="margin:0;color:#4338ca;font-size:26px;">📰 LazyBits</h1>
+    </a>
     <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${today}</p>
   </div>
   ${sections}
   <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;">
-    <p style="margin:0;color:#9ca3af;font-size:11px;">
+    <p style="margin:0 0 8px;color:#9ca3af;font-size:11px;">
       Powered by Google News RSS · LazyBits
     </p>
+    <a href="${SITE_URL}/?email=${encodeURIComponent(recipientEmail)}" style="color:#4338ca;font-size:12px;font-weight:600;">
+      ✏️ Update your topics or cancel your subscription →
+    </a>
   </div>
 </body>
 </html>`;
@@ -85,7 +92,7 @@ export async function sendSummaryEmail(
       from: { name: FROM_NAME, email: FROM_EMAIL },
       personalizations: [{ to: [{ email: to }] }],
       subject: `LazyBits — ${today}`,
-      content: [{ type: "text/html", value: toHtml(news) }],
+      content: [{ type: "text/html", value: toHtml(news, to) }],
     }),
   });
 

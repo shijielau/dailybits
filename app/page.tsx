@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 // ─── COPY BANKS ───────────────────────────────────────────────────────────────
@@ -330,6 +331,7 @@ function TimeUnit({
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const searchParams = useSearchParams();
   const [pageState, setPageState] = useState<PageState>("lookup");
   const [emailInput, setEmailInput] = useState("");
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -359,27 +361,32 @@ export default function Home() {
     []
   );
 
-  // On mount: auto-login returning users from cached email
+  const autoLogin = useCallback((email: string) => {
+    setEmailInput(email);
+    setLoading(true);
+    fetch(`/api/subscription?email=${encodeURIComponent(email)}`)
+      .then((r) => r.json())
+      .then((data: { exists: boolean; subscription?: Subscription }) => {
+        if (data.exists && data.subscription) {
+          localStorage.setItem("lazybits_email", email);
+          setSubscription(data.subscription);
+          setTopics(data.subscription.topics);
+          setTimeState(parseTo12h(data.subscription.schedule_time));
+          setTimezone(data.subscription.timezone || detectTimezone());
+          setIsEditing(false);
+          setPageState("manage");
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  // On mount: auto-login from ?email= URL param (from email link) or cached localStorage
   useEffect(() => {
+    const urlEmail = searchParams.get("email");
     const cached = localStorage.getItem("lazybits_email");
-    if (cached) {
-      setEmailInput(cached);
-      setLoading(true);
-      fetch(`/api/subscription?email=${encodeURIComponent(cached)}`)
-        .then((r) => r.json())
-        .then((data: { exists: boolean; subscription?: Subscription }) => {
-          if (data.exists && data.subscription) {
-            setSubscription(data.subscription);
-            setTopics(data.subscription.topics);
-            setTimeState(parseTo12h(data.subscription.schedule_time));
-            setTimezone(data.subscription.timezone || detectTimezone());
-            setIsEditing(false);
-            setPageState("manage");
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }
+    const email = urlEmail ?? cached;
+    if (email) autoLogin(email);
   }, []);
 
   // Fetch trending topics on mount
