@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 // ─── COPY BANKS ───────────────────────────────────────────────────────────────
@@ -331,7 +330,6 @@ function TimeUnit({
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const searchParams = useSearchParams();
   const [pageState, setPageState] = useState<PageState>("lookup");
   const [emailInput, setEmailInput] = useState("");
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -383,7 +381,7 @@ export default function Home() {
 
   // On mount: auto-login from ?email= URL param (from email link) or cached localStorage
   useEffect(() => {
-    const urlEmail = searchParams.get("email");
+    const urlEmail = new URLSearchParams(window.location.search).get("email");
     const cached = localStorage.getItem("lazybits_email");
     const email = urlEmail ?? cached;
     if (email) autoLogin(email);
